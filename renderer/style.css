@@ -1,0 +1,437 @@
+/* ===== 基礎重置 ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 1280px;
+  height: 100vh;
+  overflow: hidden;
+  font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+  user-select: none;
+}
+
+/* ===== 畫面容器 ===== */
+.screen {
+  width: 1280px;
+  height: 100vh;
+  display: none;
+  flex-direction: column;
+}
+
+.screen.active {
+  display: flex;
+}
+
+/* ===== 開始畫面 ===== */
+.start-hero {
+  width: 100%;
+  height: 60%;
+  background-color: #1a1a2e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.start-title {
+  color: #e2c97e;
+  font-size: 72px;
+  letter-spacing: 12px;
+  text-shadow: 0 0 30px rgba(226, 201, 126, 0.4);
+}
+
+.start-subtitle {
+  color: #8899aa;
+  font-size: 22px;
+  letter-spacing: 4px;
+}
+
+.start-buttons {
+  width: 100%;
+  height: 40%;
+  background-color: #16213e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.btn-group {
+  display: flex;
+  gap: 32px;
+}
+
+/* ===== 按鈕 ===== */
+.btn {
+  width: 240px;
+  height: 56px;
+  font-size: 18px;
+  font-family: inherit;
+  letter-spacing: 2px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.btn-gold {
+  background-color: #c9a227;
+  color: #1a1a2e;
+  font-weight: bold;
+}
+
+.btn-gold:hover {
+  opacity: 0.85;
+  transform: translateY(-2px);
+}
+
+.btn-gray {
+  background-color: #3a3a5c;
+  color: #8899aa;
+}
+
+/* ===== 按鈕寬版 ===== */
+.btn-wide {
+  width: 320px;
+}
+
+/* ===== 累積分數 ===== */
+.start-score {
+  color: #556677;
+  font-size: 16px;
+  letter-spacing: 2px;
+}
+
+/* ===== 職業選擇畫面 ===== */
+#screen-job-select {
+  background-color: #1a1a2e;
+}
+
+.jobselect-header {
+  width: 100%;
+  height: 80px;
+  background-color: #16213e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.jobselect-title {
+  color: #e2c97e;
+  font-size: 28px;
+  letter-spacing: 8px;
+}
+
+.jobselect-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  padding: 8px 0;
+}
+
+/* 左右切換按鈕 */
+.job-nav-btn {
+  width: 56px;
+  height: 56px;
+  font-size: 24px;
+  background-color: #2a2a4a;
+  color: #aabbcc;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  flex-shrink: 0;
+}
+
+.job-nav-btn:hover {
+  background-color: #3a3a6a;
+}
+
+/* 職業卡片 */
+.job-card {
+  width: 520px;
+  height: 430px;
+  background-color: #16213e;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.job-card-color {
+  width: 100%;
+  height: 130px;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.job-card-info {
+  flex: 1;
+  padding: 20px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.job-card-name {
+  color: #ffffff;
+  font-size: 26px;
+  letter-spacing: 4px;
+  text-align: center;
+}
+
+/* 數值列表 */
+.job-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px 16px;
+}
+
+.job-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #1a1a2e;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.stat-label {
+  color: #8899aa;
+  font-size: 13px;
+}
+
+.stat-value {
+  color: #e2c97e;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* 職業特色 */
+.job-features {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.job-feature-line {
+  color: #aabbcc;
+  font-size: 14px;
+  letter-spacing: 1px;
+  padding-left: 4px;
+}
+
+.job-feature-line::before {
+  content: '• ';
+  color: #c9a227;
+}
+
+/* 圓點指示器 */
+.job-dots {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.job-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #3a3a5c;
+  transition: background-color 0.2s;
+}
+
+.job-dot.active {
+  background-color: #c9a227;
+}
+
+/* 底部按鈕區 */
+.jobselect-footer {
+  height: 80px;
+  background-color: #16213e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ===== 棋盤主畫面 ===== */
+#screen-board {
+  background-color: #1a1a2e;
+}
+
+/* 頂部狀態列 */
+.board-status {
+  height: 50px;
+  background-color: #0f0f23;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  flex-shrink: 0;
+}
+
+.status-left, .status-center, .status-right {
+  color: #e2c97e;
+  font-size: 15px;
+  letter-spacing: 1px;
+}
+
+.status-center {
+  color: #aabbcc;
+}
+
+/* 棋盤容器 */
+.board-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* 棋盤格子網格（10欄×8列） */
+.board-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 68px);
+  grid-template-rows: repeat(8, 68px);
+  position: relative;
+}
+
+/* 單一格子 */
+.board-cell {
+  width: 68px;
+  height: 68px;
+  border: 1px solid #0a0a1a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: default;
+}
+
+.board-cell.current {
+  box-shadow: inset 0 0 0 3px #ffffff;
+  z-index: 2;
+}
+
+.cell-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.cell-num {
+  font-size: 10px;
+  color: rgba(255,255,255,0.4);
+  margin-top: 2px;
+}
+
+/* 角色標記（顯示在當前格子角落） */
+.player-marker {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  z-index: 5;
+}
+
+/* 骰子控制區（棋盤中央） */
+.dice-center {
+  position: absolute;
+  top: 68px;
+  left: 68px;
+  width: 544px;  /* 8 × 68px */
+  height: 408px; /* 6 × 68px */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  pointer-events: none;
+}
+
+.dice-center > * {
+  pointer-events: auto;
+}
+
+/* 骰子面 */
+.dice-face {
+  width: 88px;
+  height: 88px;
+  background-color: #16213e;
+  border: 3px solid #c9a227;
+  border-radius: 12px;
+  font-size: 40px;
+  font-weight: bold;
+  color: #e2c97e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dice-btn {
+  width: 180px;
+  height: 48px;
+  font-size: 16px;
+}
+
+.dice-msg {
+  color: #aabbcc;
+  font-size: 14px;
+  letter-spacing: 1px;
+  height: 20px;
+}
+
+/* 底部資訊列 */
+.board-info-bar {
+  height: 60px;
+  background-color: #0f0f23;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  flex-shrink: 0;
+}
+
+.info-cell-desc {
+  color: #aabbcc;
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+.info-inventory {
+  display: flex;
+  gap: 8px;
+}
+
+.inv-slot {
+  width: 48px;
+  height: 40px;
+  background-color: #2a2a4a;
+  border: 1px solid #3a3a6a;
+  border-radius: 4px;
+  color: #556677;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

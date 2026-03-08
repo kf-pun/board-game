@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>職業大冒險</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- 開始畫面 -->
+  <div id="screen-start" class="screen">
+
+    <!-- 上方主視覺區（60%） -->
+    <div class="start-hero">
+      <h1 class="start-title">職業大冒險</h1>
+      <p class="start-subtitle">選擇你的職業，踏上棋盤冒險</p>
+    </div>
+
+    <!-- 下方按鈕區（40%） -->
+    <div class="start-buttons">
+      <div class="btn-group">
+        <button class="btn btn-gold" id="btn-new-game">▶ 開始新遊戲</button>
+        <button class="btn btn-gray" disabled>↩ 繼續遊戲</button>
+        <button class="btn btn-gray" disabled>🏪 解鎖商店</button>
+      </div>
+      <p class="start-score">累積分數：0 分</p>
+    </div>
+
+  </div>
+
+  <!-- 職業選擇畫面 -->
+  <div id="screen-job-select" class="screen">
+
+    <!-- 頂部標題列 -->
+    <div class="jobselect-header">
+      <h2 class="jobselect-title">選擇你的職業</h2>
+    </div>
+
+    <!-- 中央職業展示區 -->
+    <div class="jobselect-main">
+      <button class="job-nav-btn" id="btn-job-prev">◀</button>
+
+      <!-- 職業卡片 -->
+      <div class="job-card">
+        <div class="job-card-color" id="job-color"></div>
+        <div class="job-card-info">
+          <h3 class="job-card-name" id="job-name"></h3>
+          <div class="job-stats">
+            <div class="job-stat"><span class="stat-label">HP</span><span class="stat-value" id="stat-hp"></span></div>
+            <div class="job-stat"><span class="stat-label">攻擊</span><span class="stat-value" id="stat-atk"></span></div>
+            <div class="job-stat"><span class="stat-label">防禦</span><span class="stat-value" id="stat-def"></span></div>
+            <div class="job-stat"><span class="stat-label">閃避率</span><span class="stat-value" id="stat-dodge"></span></div>
+            <div class="job-stat"><span class="stat-label">爆擊率</span><span class="stat-value" id="stat-crit"></span></div>
+            <div class="job-stat"><span class="stat-label">爆擊傷害</span><span class="stat-value" id="stat-critdmg"></span></div>
+          </div>
+          <div class="job-features" id="job-features"></div>
+        </div>
+      </div>
+
+      <button class="job-nav-btn" id="btn-job-next">▶</button>
+    </div>
+
+    <!-- 圓點指示器 -->
+    <div class="job-dots" id="job-dots"></div>
+
+    <!-- 底部按鈕 -->
+    <div class="jobselect-footer">
+      <button class="btn btn-gold btn-wide" id="btn-select-job">選擇此職業</button>
+    </div>
+
+  </div>
+
+  <!-- 棋盤主畫面 -->
+  <div id="screen-board" class="screen">
+
+    <!-- 頂部狀態列 -->
+    <div class="board-status">
+      <span id="board-job-info" class="status-left"></span>
+      <span id="board-turn" class="status-center"></span>
+      <span id="board-gold" class="status-right"></span>
+    </div>
+
+    <!-- 棋盤區 -->
+    <div class="board-area">
+      <div class="board-grid" id="board-grid">
+        <!-- 格子由 JS 動態生成 -->
+        <!-- 骰子控制區（棋盤中央） -->
+        <div class="dice-center" id="dice-center">
+          <div class="dice-face" id="dice-face">?</div>
+          <button class="btn btn-gold dice-btn" id="btn-roll">🎲 擲骰子</button>
+          <div class="dice-msg" id="dice-msg"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部資訊列 -->
+    <div class="board-info-bar">
+      <span class="info-cell-desc" id="board-cell-desc"></span>
+      <div class="info-inventory" id="board-inventory">
+        <span class="inv-slot">空</span>
+        <span class="inv-slot">空</span>
+        <span class="inv-slot">空</span>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="data/jobs.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

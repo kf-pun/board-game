@@ -57,6 +57,9 @@ board-game/
 - 相關功能集中在同一區塊並加上註解標題
 - 避免重複程式碼，共用邏輯抽成函式
 - 所有遊戲狀態集中在 gameState 物件管理
+- 遊戲狀態統一存放在 gameState 物件
+- 畫面初始化函式命名：initXxxScreen()
+- 事件綁定統一在各畫面 init 函式內處理
 
 ### 畫面開發規範
 - Prototype 階段不使用任何圖片
@@ -64,6 +67,19 @@ board-game/
 - 動畫效果以簡單 CSS transition 實作
 - 所有畫面固定 1280×720 解析度
 - 畫面切換以顯示/隱藏 div 實作
+
+### macOS Electron 高度注意事項
+- macOS 標題列（traffic lights）會佔用部分視窗高度
+- 畫面高度使用 `height: 100vh` 而非固定 720px
+- `100vh` 會自動對應 Electron 實際可用內容區域
+- 各畫面設計時元素總高度以 `flex` 填滿 viewport，不寫死像素
+
+### 已完成畫面規範
+- 畫面切換：以 showScreen(screenId) 函式控制
+- 畫面ID命名：screen-start、screen-job-select、screen-board、screen-battle、screen-upgrade、screen-event、screen-item、screen-shop、screen-result
+- 背景色：主色 #1a1a2e、次色 #16213e
+- 強調色：金色 #f0c040
+- 按鈕 disabled 樣式：背景 #2a2a4a、文字 #666
 
 ### 資料結構規範
 - 職業資料存放於 data/jobs.js
@@ -88,10 +104,10 @@ board-game/
 
 ## 目前開發進度
 - [ ] Electron 基礎框架
-- [ ] 開始畫面
-- [ ] 職業選擇畫面
-- [ ] 棋盤主畫面
-- [ ] 骰子與角色移動
+- [x] 開始畫面
+- [x] 職業選擇畫面
+- [x] 棋盤主畫面
+- [x] 骰子與角色移動
 - [ ] 戰鬥畫面
 - [ ] 技能系統
 - [ ] 升級選擇畫面
