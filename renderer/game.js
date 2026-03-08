@@ -1,3 +1,20 @@
+// ===== 狀態效果說明對照表 =====
+const STATUS_EFFECTS = {
+  '強化': '攻擊力 +8（每層）',
+  '鞏固': '防禦力 +6（每層）',
+  '恢復': '每回合回復 15 HP（每層）',
+  '神速': '閃避率 +8%（每層）',
+  '集中': '爆擊率 +8%（每層）',
+  '荊棘': '受擊反傷 12（每層）',
+  '燃燒': '每回合傷害 4 + 攻擊力×12%（每層）',
+  '中毒': '每回合傷害 8（每層）',
+  '詛咒': '受到傷害 +20~40%',
+  '虛弱': '攻擊力 -25~45%',
+  '裂甲': '防禦力 -20~35%',
+  '混亂': '50% 機率攻擊自身',
+  '冰凍': '跳過當回合行動'
+}
+
 // ===== 格子類型定義 =====
 const CELL_TYPES = {
   start:   { label: '起點', icon: '🏁', color: '#f0c040' },
@@ -555,6 +572,16 @@ function initUpgradeScreen(options) {
       ? `<div class="upgrade-card-cd">⏱ CD：${opt.cd}回合</div>`
       : ''
 
+    // 偵測說明中的狀態關鍵字，生成提示區
+    const matchedStatuses = Object.keys(STATUS_EFFECTS).filter(name => opt.desc.includes(name))
+    const hintsHtml = matchedStatuses.length > 0
+      ? `<div class="card-status-hints">${
+          matchedStatuses.map(name =>
+            `<div class="card-status-line">🔸 ${name}：${STATUS_EFFECTS[name]}</div>`
+          ).join('')
+        }</div>`
+      : ''
+
     card.innerHTML = `
       <div class="upgrade-card-title">${opt.emoji} ${opt.name}</div>
       <div class="upgrade-card-tags">
@@ -562,6 +589,7 @@ function initUpgradeScreen(options) {
         ${tagHtml}
       </div>
       <div class="upgrade-card-desc">${opt.desc}</div>
+      ${hintsHtml}
       ${cdHtml}
     `
     card.addEventListener('click', () => selectUpgradeCard(i))

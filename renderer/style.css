@@ -743,7 +743,7 @@ html, body {
 .upgrade-card {
   flex: 1;
   max-width: 340px;
-  height: 320px;
+  min-height: 280px;
   background-color: #16213e;
   border: 1px solid #c9a227;
   border-radius: 12px;
@@ -802,6 +802,22 @@ html, body {
   color: #8899aa;
   font-size: 13px;
   letter-spacing: 1px;
+}
+
+/* 狀態效果提示區 */
+.card-status-hints {
+  border-top: 1px solid #2a2a4a;
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-status-line {
+  color: #aaaaaa;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  line-height: 1.5;
 }
 
 /* 底部（60px） */
