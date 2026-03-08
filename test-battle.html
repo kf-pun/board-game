@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>職業大冒險 — 戰鬥畫面測試</title>
+  <style>
+/* ===== 基礎重置 ===== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  width: 1280px; height: 100vh; overflow: hidden;
+  font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+  user-select: none;
+}
+.screen { width: 1280px; height: 100vh; display: none; flex-direction: column; }
+.screen.active { display: flex; }
+
+/* 開始畫面 */
+.start-hero { width:100%; height:60%; background-color:#1a1a2e; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; }
+.start-title { color:#e2c97e; font-size:72px; letter-spacing:12px; text-shadow:0 0 30px rgba(226,201,126,0.4); }
+.start-subtitle { color:#8899aa; font-size:22px; letter-spacing:4px; }
+.start-buttons { width:100%; height:40%; background-color:#16213e; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:24px; }
+.btn-group { display:flex; gap:32px; }
+.btn { width:240px; height:56px; font-size:18px; font-family:inherit; letter-spacing:2px; border:none; border-radius:4px; cursor:pointer; transition:opacity 0.15s, transform 0.1s; }
+.btn:disabled { opacity:0.35; cursor:not-allowed; }
+.btn-gold { background-color:#c9a227; color:#1a1a2e; font-weight:bold; }
+.btn-gold:hover { opacity:0.85; transform:translateY(-2px); }
+.btn-gray { background-color:#3a3a5c; color:#8899aa; }
+.btn-wide { width:320px; }
+.start-score { color:#556677; font-size:16px; letter-spacing:2px; }
+
+/* 職業選擇畫面 */
+#screen-job-select { background-color:#1a1a2e; }
+.jobselect-header { width:100%; height:80px; background-color:#16213e; display:flex; align-items:center; justify-content:center; }
+.jobselect-title { color:#e2c97e; font-size:28px; letter-spacing:8px; }
+.jobselect-main { flex:1; display:flex; align-items:center; justify-content:center; gap:48px; padding:8px 0; }
+.job-nav-btn { width:56px; height:56px; font-size:24px; background-color:#2a2a4a; color:#aabbcc; border:none; border-radius:4px; cursor:pointer; transition:background-color 0.15s; flex-shrink:0; }
+.job-nav-btn:hover { background-color:#3a3a6a; }
+.job-card { width:520px; height:430px; background-color:#16213e; border-radius:8px; display:flex; flex-direction:column; overflow:hidden; }
+.job-card-color { width:100%; height:130px; transition:background-color 0.3s; display:flex; align-items:center; justify-content:center; }
+.job-card-info { flex:1; padding:20px 28px; display:flex; flex-direction:column; gap:12px; }
+.job-card-name { color:#ffffff; font-size:26px; letter-spacing:4px; text-align:center; }
+.job-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px 16px; }
+.job-stat { display:flex; justify-content:space-between; align-items:center; background-color:#1a1a2e; padding:4px 10px; border-radius:4px; }
+.stat-label { color:#8899aa; font-size:13px; }
+.stat-value { color:#e2c97e; font-size:14px; font-weight:bold; }
+.job-features { display:flex; flex-direction:column; gap:4px; }
+.job-feature-line { color:#aabbcc; font-size:14px; letter-spacing:1px; padding-left:4px; }
+.job-feature-line::before { content:'• '; color:#c9a227; }
+.job-dots { height:32px; display:flex; align-items:center; justify-content:center; gap:12px; }
+.job-dot { width:10px; height:10px; border-radius:50%; background-color:#3a3a5c; transition:background-color 0.2s; }
+.job-dot.active { background-color:#c9a227; }
+.jobselect-footer { height:80px; background-color:#16213e; display:flex; align-items:center; justify-content:center; }
+
+/* 棋盤畫面 */
+#screen-board { background-color:#1a1a2e; }
+.board-status { height:50px; background-color:#0f0f23; display:flex; align-items:center; justify-content:space-between; padding:0 32px; flex-shrink:0; }
+.status-left, .status-center, .status-right { color:#e2c97e; font-size:15px; letter-spacing:1px; }
+.status-center { color:#aabbcc; }
+.board-area { flex:1; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.board-grid { display:grid; grid-template-columns:repeat(10,68px); grid-template-rows:repeat(8,68px); position:relative; }
+.board-cell { width:68px; height:68px; border:1px solid #0a0a1a; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; cursor:default; }
+.board-cell.current { box-shadow:inset 0 0 0 3px #ffffff; z-index:2; }
+.cell-icon { font-size:20px; line-height:1; }
+.cell-num { font-size:10px; color:rgba(255,255,255,0.4); margin-top:2px; }
+.player-marker { position:absolute; bottom:4px; right:4px; width:16px; height:16px; border-radius:50%; border:2px solid #ffffff; z-index:5; }
+.dice-center { position:absolute; top:68px; left:68px; width:544px; height:408px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; pointer-events:none; }
+.dice-center > * { pointer-events:auto; }
+.dice-face { width:88px; height:88px; background-color:#16213e; border:3px solid #c9a227; border-radius:12px; font-size:40px; font-weight:bold; color:#e2c97e; display:flex; align-items:center; justify-content:center; }
+.dice-btn { width:180px; height:48px; font-size:16px; }
+.dice-msg { color:#aabbcc; font-size:14px; letter-spacing:1px; height:20px; }
+.board-info-bar { height:60px; background-color:#0f0f23; display:flex; align-items:center; justify-content:space-between; padding:0 32px; flex-shrink:0; }
+.info-cell-desc { color:#aabbcc; font-size:14px; letter-spacing:1px; }
+.info-inventory { display:flex; gap:8px; }
+.inv-slot { width:48px; height:40px; background-color:#2a2a4a; border:1px solid #3a3a6a; border-radius:4px; color:#556677; font-size:12px; display:flex; align-items:center; justify-content:center; }
+
+/* 戰鬥畫面 */
+#screen-battle { background-color:#1a1a2e; }
+.battle-status { height:50px; background-color:#0f0f23; display:flex; align-items:center; justify-content:space-between; padding:0 32px; flex-shrink:0; }
+.battle-status-left { color:#aabbcc; font-size:14px; letter-spacing:1px; min-width:120px; }
+.battle-status-center { font-size:16px; font-weight:bold; letter-spacing:2px; }
+.battle-status-center.player-turn { color:#27ae60; }
+.battle-status-center.enemy-turn  { color:#c0392b; }
+.battle-status-right { display:flex; gap:8px; min-width:120px; justify-content:flex-end; }
+.battle-icon-btn { background:none; border:1px solid #3a3a5c; border-radius:4px; color:#aabbcc; font-size:16px; width:36px; height:32px; cursor:pointer; }
+.battle-stage { height:300px; display:flex; align-items:center; background-color:#16213e; padding:0 48px; flex-shrink:0; }
+.battle-player { width:30%; display:flex; flex-direction:column; align-items:center; gap:8px; }
+.battle-sprite { border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:bold; color:rgba(255,255,255,0.7); letter-spacing:1px; }
+.player-sprite { width:100px; height:100px; }
+.enemy-sprite { width:80px; height:80px; background-color:#922b21; }
+.battle-name { color:#ffffff; font-size:16px; letter-spacing:2px; }
+.hp-bar-wrap { width:160px; height:10px; background-color:#2a2a4a; border-radius:5px; overflow:hidden; }
+.hp-bar { height:100%; border-radius:5px; transition:width 0.3s, background-color 0.3s; }
+.hp-bar.high { background-color:#27ae60; }
+.hp-bar.mid  { background-color:#f39c12; }
+.hp-bar.low  { background-color:#c0392b; }
+.hp-text { color:#aabbcc; font-size:13px; }
+.battle-enemies { width:70%; display:flex; align-items:center; justify-content:center; gap:48px; }
+.battle-enemy { display:flex; flex-direction:column; align-items:center; gap:8px; }
+.dmg-popup { position:absolute; color:#e74c3c; font-size:22px; font-weight:bold; pointer-events:none; animation:floatUp 0.8s ease-out forwards; }
+.dmg-popup.heal { color:#27ae60; }
+@keyframes floatUp { 0%{opacity:1;transform:translateY(0)} 100%{opacity:0;transform:translateY(-40px)} }
+.battle-bottom { flex:1; display:flex; min-height:0; }
+.battle-info-panel { width:40%; background-color:#16213e; border-right:1px solid #2a2a4a; display:flex; flex-direction:column; padding:16px 20px; gap:10px; }
+.info-tabs { display:flex; gap:8px; }
+.info-tab { padding:4px 16px; background-color:#2a2a4a; border:1px solid #3a3a6a; border-radius:4px; color:#8899aa; font-size:13px; font-family:inherit; cursor:pointer; }
+.info-tab.active { background-color:#1a1a2e; color:#e2c97e; border-color:#c9a227; }
+.info-content { flex:1; display:flex; flex-direction:column; gap:6px; }
+.info-row { display:flex; justify-content:space-between; font-size:13px; padding:3px 0; border-bottom:1px solid #1a1a2e; }
+.info-row-label { color:#8899aa; }
+.info-row-value { color:#e2c97e; }
+.info-ailments { font-size:13px; color:#8899aa; }
+#ailment-list { color:#aabbcc; }
+.battle-actions { width:60%; display:flex; flex-wrap:wrap; align-content:flex-start; gap:12px; padding:16px 24px; }
+.action-btn { width:200px; height:52px; font-size:16px; letter-spacing:1px; }
+.action-log { width:100%; color:#8899aa; font-size:13px; letter-spacing:1px; min-height:20px; }
+
+/* 測試專用覆蓋通知 */
+#test-notify {
+  position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+  background: #27ae60; color: #fff; padding: 10px 28px;
+  border-radius: 6px; font-size: 15px; font-weight: bold;
+  letter-spacing: 2px; z-index: 9999;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+}
+#test-notify.show { opacity: 1; }
+
+/* 測試用跳轉列 */
+#test-bar {
+  position: fixed; top: 0; right: 0;
+  background: #0f0f23; border-left: 2px solid #c9a227;
+  padding: 8px; display: flex; flex-direction: column; gap: 6px;
+  z-index: 9999;
+}
+#test-bar button {
+  background: #2a2a4a; color: #e2c97e; border: 1px solid #c9a227;
+  border-radius: 4px; padding: 4px 10px; font-size: 12px;
+  cursor: pointer; font-family: inherit;
+}
+#test-bar button:hover { background: #3a3a6a; }
+  </style>
+</head>
+<body>
+
+  <!-- 開始畫面 -->
+  <div id="screen-start" class="screen">
+    <div class="start-hero">
+      <h1 class="start-title">職業大冒險</h1>
+      <p class="start-subtitle">選擇你的職業，踏上棋盤冒險</p>
+    </div>
+    <div class="start-buttons">
+      <div class="btn-group">
+        <button class="btn btn-gold" id="btn-new-game">▶ 開始新遊戲</button>
+        <button class="btn btn-gray" disabled>↩ 繼續遊戲</button>
+        <button class="btn btn-gray" disabled>🏪 解鎖商店</button>
+      </div>
+      <p class="start-score">累積分數：0 分</p>
+    </div>
+  </div>
+
+  <!-- 職業選擇畫面 -->
+  <div id="screen-job-select" class="screen">
+    <div class="jobselect-header"><h2 class="jobselect-title">選擇你的職業</h2></div>
+    <div class="jobselect-main">
+      <button class="job-nav-btn" id="btn-job-prev">◀</button>
+      <div class="job-card">
+        <div class="job-card-color" id="job-color"></div>
+        <div class="job-card-info">
+          <h3 class="job-card-name" id="job-name"></h3>
+          <div class="job-stats">
+            <div class="job-stat"><span class="stat-label">HP</span><span class="stat-value" id="stat-hp"></span></div>
+            <div class="job-stat"><span class="stat-label">攻擊</span><span class="stat-value" id="stat-atk"></span></div>
+            <div class="job-stat"><span class="stat-label">防禦</span><span class="stat-value" id="stat-def"></span></div>
+            <div class="job-stat"><span class="stat-label">閃避率</span><span class="stat-value" id="stat-dodge"></span></div>
+            <div class="job-stat"><span class="stat-label">爆擊率</span><span class="stat-value" id="stat-crit"></span></div>
+            <div class="job-stat"><span class="stat-label">爆擊傷害</span><span class="stat-value" id="stat-critdmg"></span></div>
+          </div>
+          <div class="job-features" id="job-features"></div>
+        </div>
+      </div>
+      <button class="job-nav-btn" id="btn-job-next">▶</button>
+    </div>
+    <div class="job-dots" id="job-dots"></div>
+    <div class="jobselect-footer">
+      <button class="btn btn-gold btn-wide" id="btn-select-job">選擇此職業</button>
+    </div>
+  </div>
+
+  <!-- 棋盤主畫面 -->
+  <div id="screen-board" class="screen">
+    <div class="board-status">
+      <span id="board-job-info" class="status-left"></span>
+      <span id="board-turn" class="status-center"></span>
+      <span id="board-gold" class="status-right"></span>
+    </div>
+    <div class="board-area">
+      <div class="board-grid" id="board-grid">
+        <div class="dice-center" id="dice-center">
+          <div class="dice-face" id="dice-face">?</div>
+          <button class="btn btn-gold dice-btn" id="btn-roll">🎲 擲骰子</button>
+          <div class="dice-msg" id="dice-msg"></div>
+        </div>
+      </div>
+    </div>
+    <div class="board-info-bar">
+      <span class="info-cell-desc" id="board-cell-desc"></span>
+      <div class="info-inventory" id="board-inventory">
+        <span class="inv-slot">空</span><span class="inv-slot">空</span><span class="inv-slot">空</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 戰鬥畫面 -->
+  <div id="screen-battle" class="screen">
+    <div class="battle-status">
+      <span id="battle-round" class="battle-status-left">戰鬥回合 1</span>
+      <span id="battle-phase" class="battle-status-center">我方行動</span>
+      <div class="battle-status-right">
+        <button class="battle-icon-btn">📋</button>
+        <button class="battle-icon-btn">⚙️</button>
+      </div>
+    </div>
+    <div class="battle-stage">
+      <div class="battle-player">
+        <div class="battle-sprite player-sprite" id="player-sprite"></div>
+        <div class="battle-name" id="player-name"></div>
+        <div class="hp-bar-wrap"><div class="hp-bar" id="player-hp-bar"></div></div>
+        <div class="hp-text" id="player-hp-text"></div>
+      </div>
+      <div class="battle-enemies" id="battle-enemies"></div>
+    </div>
+    <div class="battle-bottom">
+      <div class="battle-info-panel">
+        <div class="info-tabs">
+          <button class="info-tab active" id="tab-player" data-tab="player">我方</button>
+          <button class="info-tab" id="tab-enemy" data-tab="enemy">敵人</button>
+        </div>
+        <div class="info-content" id="info-content"></div>
+        <div class="info-ailments"><span class="ailment-label">狀態異常：</span><span id="ailment-list">無</span></div>
+      </div>
+      <div class="battle-actions">
+        <button class="btn btn-gold action-btn" id="btn-attack">普攻</button>
+        <button class="btn btn-gray action-btn" disabled>技能 1（空）</button>
+        <button class="btn btn-gray action-btn" disabled>技能 2（空）</button>
+        <button class="btn btn-gray action-btn" disabled>技能 3（空）</button>
+        <div class="action-log" id="action-log"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 測試通知 -->
+  <div id="test-notify"></div>
+
+  <!-- 測試捷徑列 -->
+  <div id="test-bar">
+    <small style="color:#556677;font-size:10px">TEST</small>
+    <button onclick="testJumpBattle()">⚔ 直跳戰鬥</button>
+  </div>
+
+  <script>
+// ===== 覆寫 confirm / alert（避免阻塞） =====
+window._lastAlert = '';
+window.confirm = function(msg) { console.log('[confirm]', msg); return true; };
+window.alert   = function(msg) {
+  console.log('[alert]', msg);
+  window._lastAlert = msg;
+  const el = document.getElementById('test-notify');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+};
+  </script>
+
+  <script>
+// ===== 職業資料（inline from jobs.js） =====
+const JOBS = [
+  { id:'warrior',  name:'戰士',  color:'#c0392b',
+    stats:{ hp:150, atk:18, def:15, dodge:5,  crit:8,  critDmg:150 },
+    features:['高防禦高HP','利用厚實肉身反傷敵人'] },
+  { id:'assassin', name:'刺客',  color:'#2c3e50',
+    stats:{ hp:90,  atk:22, def:5,  dodge:25, crit:12, critDmg:160 },
+    features:['超高閃避與連擊','普攻可攻擊2次'] },
+  { id:'mage',     name:'法師',  color:'#8e44ad',
+    stats:{ hp:80,  atk:25, def:3,  dodge:8,  crit:20, critDmg:220 },
+    features:['極高爆擊傷害的玻璃砲台'] },
+  { id:'warlock',  name:'術士',  color:'#27ae60',
+    stats:{ hp:85,  atk:12, def:6,  dodge:10, crit:8,  critDmg:140 },
+    features:['普攻附加中毒','持久DoT消耗流'] }
+]
+  </script>
+
+  <script>
+// ===== 遊戲邏輯（inline from game.js — 完整原版） =====
+const CELL_TYPES = {
+  start:   { label:'起點', icon:'🏁', color:'#f0c040' },
+  battle:  { label:'戰鬥', icon:'⚔️', color:'#c0392b' },
+  item:    { label:'道具', icon:'🎁', color:'#27ae60' },
+  event:   { label:'事件', icon:'📖', color:'#2980b9' },
+  shop:    { label:'商店', icon:'🏪', color:'#8e44ad' },
+  trap:    { label:'陷阱', icon:'💀', color:'#7f8c8d' },
+  bless:   { label:'祝福', icon:'✨', color:'#f39c12' },
+  element: { label:'元素', icon:'🔴', color:'#e74c3c' }
+}
+
+const gameState = {
+  currentScreen:'start', totalScore:0, selectedJobIndex:0, selectedJob:null,
+  currentTurn:1, gold:0, playerPos:0, boardCells:[], inventory:[null,null,null],
+  playerCurrentHp:0, battleRound:1, battlePhase:'player', enemies:[], activeInfoTab:'player'
+}
+
+function showScreen(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'))
+  document.getElementById(screenId).classList.add('active')
+  gameState.currentScreen = screenId
+}
+
+function initStartScreen() {
+  document.getElementById('btn-new-game').addEventListener('click', () => {
+    showScreen('screen-job-select'); renderJobCard()
+  })
+}
+
+function renderJobCard() {
+  const job = JOBS[gameState.selectedJobIndex]
+  document.getElementById('job-color').style.backgroundColor = job.color
+  document.getElementById('job-name').textContent = job.name
+  document.getElementById('stat-hp').textContent = job.stats.hp
+  document.getElementById('stat-atk').textContent = job.stats.atk
+  document.getElementById('stat-def').textContent = job.stats.def
+  document.getElementById('stat-dodge').textContent = job.stats.dodge + '%'
+  document.getElementById('stat-crit').textContent = job.stats.crit + '%'
+  document.getElementById('stat-critdmg').textContent = job.stats.critDmg + '%'
+  const featuresEl = document.getElementById('job-features')
+  featuresEl.innerHTML = ''
+  job.features.forEach(f => {
+    const p = document.createElement('p')
+    p.className = 'job-feature-line'; p.textContent = f; featuresEl.appendChild(p)
+  })
+  renderDots()
+}
+
+function renderDots() {
+  const dotsEl = document.getElementById('job-dots')
+  dotsEl.innerHTML = ''
+  JOBS.forEach((_, i) => {
+    const dot = document.createElement('div')
+    dot.className = 'job-dot' + (i === gameState.selectedJobIndex ? ' active' : '')
+    dotsEl.appendChild(dot)
+  })
+}
+
+function initJobSelectScreen() {
+  document.getElementById('btn-job-prev').addEventListener('click', () => {
+    gameState.selectedJobIndex = (gameState.selectedJobIndex - 1 + JOBS.length) % JOBS.length
+    renderJobCard()
+  })
+  document.getElementById('btn-job-next').addEventListener('click', () => {
+    gameState.selectedJobIndex = (gameState.selectedJobIndex + 1) % JOBS.length
+    renderJobCard()
+  })
+  document.getElementById('btn-select-job').addEventListener('click', () => {
+    const job = JOBS[gameState.selectedJobIndex]
+    const confirmed = confirm(`確定選擇「${job.name}」作為你的職業嗎？`)
+    if (confirmed) {
+      gameState.selectedJob = job
+      gameState.boardCells = generateBoard()
+      gameState.playerPos = 0; gameState.currentTurn = 1; gameState.gold = 0
+      showScreen('screen-board'); renderBoard(); updateBoardStatus(); updateCellDesc()
+    }
+  })
+}
+
+function generateBoard() {
+  const pool = [
+    'battle','battle','battle','battle','battle','battle','battle','battle',
+    'item','item','item','item','item',
+    'event','event','event','event','event','event',
+    'shop','shop','shop','trap','trap','trap','bless','bless','bless'
+  ]
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]]
+  }
+  let poolIdx = 0; const cells = []
+  for (let i = 0; i < 32; i++) {
+    if (i === 0) cells.push('start')
+    else if (i === 10 || i === 20 || i === 30) cells.push('element')
+    else cells.push(pool[poolIdx++])
+  }
+  return cells
+}
+
+function getCellGridPos(index) {
+  if (index <= 9)  return { row:1, col:index+1 }
+  if (index <= 15) return { row:index-8, col:10 }
+  if (index <= 25) return { row:8, col:26-index }
+  return { row:33-index, col:1 }
+}
+
+function renderBoard() {
+  const grid = document.getElementById('board-grid')
+  grid.querySelectorAll('.board-cell').forEach(el => el.remove())
+  gameState.boardCells.forEach((type, index) => {
+    const { row, col } = getCellGridPos(index)
+    const cellType = CELL_TYPES[type]
+    const cell = document.createElement('div')
+    cell.className = 'board-cell'; cell.id = `cell-${index}`
+    cell.style.gridRow = row; cell.style.gridColumn = col
+    cell.style.backgroundColor = cellType.color
+    cell.innerHTML = `<span class="cell-icon">${cellType.icon}</span><span class="cell-num">${index}</span>`
+    grid.appendChild(cell)
+  })
+  updatePlayerMarker()
+}
+
+function updatePlayerMarker() {
+  document.querySelectorAll('.player-marker').forEach(el => el.remove())
+  document.querySelectorAll('.board-cell.current').forEach(el => el.classList.remove('current'))
+  const currentCell = document.getElementById(`cell-${gameState.playerPos}`)
+  if (!currentCell) return
+  currentCell.classList.add('current')
+  const marker = document.createElement('div')
+  marker.className = 'player-marker'
+  marker.style.backgroundColor = gameState.selectedJob.color
+  currentCell.appendChild(marker)
+}
+
+function updateBoardStatus() {
+  document.getElementById('board-job-info').textContent = `${gameState.selectedJob.name} Lv.1`
+  document.getElementById('board-turn').textContent = `回合 ${gameState.currentTurn} / 20`
+  document.getElementById('board-gold').textContent = `💰 ${gameState.gold}`
+}
+
+function updateCellDesc() {
+  const type = gameState.boardCells[gameState.playerPos]
+  const cellType = CELL_TYPES[type]
+  document.getElementById('board-cell-desc').textContent =
+    `當前格子：${cellType.icon} ${cellType.label}格（第 ${gameState.playerPos} 格）`
+}
+
+function rollDice() {
+  const result = Math.floor(Math.random() * 6) + 1
+  document.getElementById('dice-face').textContent = result
+  document.getElementById('btn-roll').disabled = true
+  document.getElementById('dice-msg').textContent = `移動 ${result} 格…`
+  setTimeout(() => {
+    gameState.playerPos = (gameState.playerPos + result) % 32
+    updatePlayerMarker(); updateCellDesc()
+    const type = gameState.boardCells[gameState.playerPos]
+    document.getElementById('dice-msg').textContent = `落在第 ${gameState.playerPos} 格`
+    setTimeout(() => { triggerCellEvent(type) }, 300)
+  }, 400)
+}
+
+function triggerCellEvent(type) {
+  if (type === 'battle') { startBattle() }
+  else {
+    const cellType = CELL_TYPES[type]
+    alert(`觸發：${cellType.icon} ${cellType.label}格`)
+    afterCellEvent()
+  }
+}
+
+function afterCellEvent() {
+  gameState.currentTurn++; updateBoardStatus()
+  document.getElementById('btn-roll').disabled = false
+  document.getElementById('dice-msg').textContent = ''
+}
+
+function initBoardScreen() {
+  document.getElementById('btn-roll').addEventListener('click', rollDice)
+}
+
+// ===== 戰鬥畫面 =====
+function startBattle() {
+  const job = gameState.selectedJob
+  gameState.playerCurrentHp = job.stats.hp
+  gameState.battleRound = 1; gameState.battlePhase = 'player'; gameState.activeInfoTab = 'player'
+  gameState.enemies = [{ name:'哥布林戰士', maxHp:60, hp:60, atk:12, def:5 }]
+  showScreen('screen-battle'); renderBattleScreen()
+}
+
+function renderBattleScreen() {
+  const job = gameState.selectedJob
+  document.getElementById('player-sprite').style.backgroundColor = job.color
+  document.getElementById('player-sprite').textContent = job.name[0]
+  document.getElementById('player-name').textContent = job.name
+  updateHpBar('player-hp-bar', gameState.playerCurrentHp, job.stats.hp)
+  document.getElementById('player-hp-text').textContent = `${gameState.playerCurrentHp} / ${job.stats.hp}`
+  const enemiesEl = document.getElementById('battle-enemies')
+  enemiesEl.innerHTML = ''
+  gameState.enemies.forEach((enemy, i) => {
+    const div = document.createElement('div')
+    div.className = 'battle-enemy'; div.id = `enemy-${i}`
+    div.innerHTML = `
+      <div class="battle-sprite enemy-sprite" id="enemy-sprite-${i}">${enemy.name[0]}</div>
+      <div class="battle-name">${enemy.name}</div>
+      <div class="hp-bar-wrap"><div class="hp-bar" id="enemy-hp-bar-${i}"></div></div>
+      <div class="hp-text" id="enemy-hp-text-${i}"></div>`
+    enemiesEl.appendChild(div)
+    updateHpBar(`enemy-hp-bar-${i}`, enemy.hp, enemy.maxHp)
+    document.getElementById(`enemy-hp-text-${i}`).textContent = `${enemy.hp} / ${enemy.maxHp}`
+  })
+  updateBattleStatus(); renderInfoContent(gameState.activeInfoTab); setActionLog('')
+}
+
+function updateHpBar(barId, current, max) {
+  const bar = document.getElementById(barId)
+  if (!bar) return
+  const pct = Math.max(0, current / max * 100)
+  bar.style.width = pct + '%'
+  bar.className = 'hp-bar ' + (pct > 50 ? 'high' : pct > 25 ? 'mid' : 'low')
+}
+
+function updateBattleStatus() {
+  document.getElementById('battle-round').textContent = `戰鬥回合 ${gameState.battleRound}`
+  const phaseEl = document.getElementById('battle-phase')
+  if (gameState.battlePhase === 'player') {
+    phaseEl.textContent = '我方行動'; phaseEl.className = 'battle-status-center player-turn'
+  } else {
+    phaseEl.textContent = '敵方行動'; phaseEl.className = 'battle-status-center enemy-turn'
+  }
+}
+
+function renderInfoContent(tab) {
+  gameState.activeInfoTab = tab
+  document.querySelectorAll('.info-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab))
+  const job = gameState.selectedJob; const enemy = gameState.enemies[0]
+  const rows = tab === 'player'
+    ? [['攻擊', job.stats.atk],['防禦', job.stats.def],['閃避率', job.stats.dodge+'%'],['爆擊率', job.stats.crit+'%']]
+    : [['攻擊', enemy.atk],['防禦', enemy.def],['閃避率', '0%'],['爆擊率', '0%']]
+  document.getElementById('info-content').innerHTML =
+    rows.map(([label, val]) =>
+      `<div class="info-row"><span class="info-row-label">${label}</span><span class="info-row-value">${val}</span></div>`
+    ).join('')
+}
+
+function showDamagePopup(targetEl, amount) {
+  const pop = document.createElement('div')
+  pop.className = 'dmg-popup'; pop.textContent = `-${amount}`
+  targetEl.style.position = 'relative'; targetEl.appendChild(pop)
+  setTimeout(() => pop.remove(), 900)
+}
+
+function setActionLog(text) { document.getElementById('action-log').textContent = text }
+
+function playerAttack() {
+  if (gameState.battlePhase !== 'player') return
+  document.getElementById('btn-attack').disabled = true
+  const job = gameState.selectedJob; const enemy = gameState.enemies[0]
+  const enemyDodge = enemy.dodge ?? 0
+  if (Math.random() * 100 < enemyDodge) {
+    setActionLog(`${enemy.name} 閃避了你的攻擊！`)
+    gameState.battlePhase = 'enemy'; updateBattleStatus()
+    setTimeout(enemyTurn, 900); return
+  }
+  let dmg = Math.max(0, job.stats.atk - enemy.def)
+  let logText = `對 ${enemy.name} 造成 ${dmg} 點傷害`
+  if (Math.random() * 100 < job.stats.crit) {
+    dmg = Math.floor(dmg * job.stats.critDmg / 100)
+    logText = `爆擊！對 ${enemy.name} 造成 ${dmg} 點傷害`
+  }
+  enemy.hp = Math.max(0, enemy.hp - dmg)
+  updateHpBar('enemy-hp-bar-0', enemy.hp, enemy.maxHp)
+  document.getElementById('enemy-hp-text-0').textContent = `${enemy.hp} / ${enemy.maxHp}`
+  const enemySprite = document.getElementById('enemy-sprite-0')
+  if (enemySprite) showDamagePopup(enemySprite, dmg)
+  setActionLog(logText)
+  if (enemy.hp <= 0) { setTimeout(() => endBattle('win'), 600); return }
+  gameState.battlePhase = 'enemy'; updateBattleStatus()
+  setTimeout(enemyTurn, 900)
+}
+
+function enemyTurn() {
+  const job = gameState.selectedJob; const enemy = gameState.enemies[0]
+  if (Math.random() * 100 < job.stats.dodge) {
+    setActionLog(`你閃避了 ${enemy.name} 的攻擊！`)
+    gameState.battleRound++; gameState.battlePhase = 'player'; updateBattleStatus()
+    document.getElementById('btn-attack').disabled = false; return
+  }
+  const dmg = Math.max(0, enemy.atk - job.stats.def)
+  gameState.playerCurrentHp = Math.max(0, gameState.playerCurrentHp - dmg)
+  updateHpBar('player-hp-bar', gameState.playerCurrentHp, job.stats.hp)
+  document.getElementById('player-hp-text').textContent = `${gameState.playerCurrentHp} / ${job.stats.hp}`
+  const playerSprite = document.getElementById('player-sprite')
+  if (playerSprite) showDamagePopup(playerSprite, dmg)
+  setActionLog(`${enemy.name} 對你造成 ${dmg} 點傷害`)
+  if (gameState.playerCurrentHp <= 0) { setTimeout(() => endBattle('lose'), 600); return }
+  gameState.battleRound++; gameState.battlePhase = 'player'; updateBattleStatus()
+  document.getElementById('btn-attack').disabled = false
+  setActionLog('你的回合')
+}
+
+function endBattle(result) {
+  if (result === 'win') { alert('戰鬥勝利！') }
+  else { alert('戰鬥失敗！') }
+  showScreen('screen-board'); afterCellEvent()
+}
+
+function initBattleScreen() {
+  document.getElementById('btn-attack').addEventListener('click', playerAttack)
+  document.getElementById('tab-player').addEventListener('click', () => renderInfoContent('player'))
+  document.getElementById('tab-enemy').addEventListener('click', () => renderInfoContent('enemy'))
+}
+
+// ===== 測試輔助：直跳戰鬥 =====
+function testJumpBattle() {
+  // 預設選戰士直接進入戰鬥
+  gameState.selectedJobIndex = 0
+  gameState.selectedJob = JOBS[0]
+  gameState.boardCells = generateBoard()
+  gameState.playerPos = 0; gameState.currentTurn = 1; gameState.gold = 0
+  startBattle()
+}
+
+function init() {
+  showScreen('screen-start')
+  initStartScreen(); initJobSelectScreen(); initBoardScreen(); initBattleScreen()
+}
+init()
+  </script>
+</body>
+</html>

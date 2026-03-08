@@ -435,3 +435,249 @@ html, body {
   align-items: center;
   justify-content: center;
 }
+
+/* ===== 戰鬥畫面 ===== */
+#screen-battle {
+  background-color: #1a1a2e;
+}
+
+/* 頂部狀態列 */
+.battle-status {
+  height: 50px;
+  background-color: #0f0f23;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  flex-shrink: 0;
+}
+
+.battle-status-left {
+  color: #aabbcc;
+  font-size: 14px;
+  letter-spacing: 1px;
+  min-width: 120px;
+}
+
+.battle-status-center {
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.battle-status-center.player-turn { color: #27ae60; }
+.battle-status-center.enemy-turn  { color: #c0392b; }
+
+.battle-status-right {
+  display: flex;
+  gap: 8px;
+  min-width: 120px;
+  justify-content: flex-end;
+}
+
+.battle-icon-btn {
+  background: none;
+  border: 1px solid #3a3a5c;
+  border-radius: 4px;
+  color: #aabbcc;
+  font-size: 16px;
+  width: 36px;
+  height: 32px;
+  cursor: pointer;
+}
+
+/* 戰鬥表演區 */
+.battle-stage {
+  height: 300px;
+  display: flex;
+  align-items: center;
+  background-color: #16213e;
+  padding: 0 48px;
+  flex-shrink: 0;
+}
+
+/* 我方角色（左30%） */
+.battle-player {
+  width: 30%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.battle-sprite {
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 1px;
+}
+
+.player-sprite {
+  width: 100px;
+  height: 100px;
+}
+
+.enemy-sprite {
+  width: 80px;
+  height: 80px;
+  background-color: #922b21;
+}
+
+.battle-name {
+  color: #ffffff;
+  font-size: 16px;
+  letter-spacing: 2px;
+}
+
+/* HP 條 */
+.hp-bar-wrap {
+  width: 160px;
+  height: 10px;
+  background-color: #2a2a4a;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.hp-bar {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.3s, background-color 0.3s;
+}
+
+.hp-bar.high   { background-color: #27ae60; }
+.hp-bar.mid    { background-color: #f39c12; }
+.hp-bar.low    { background-color: #c0392b; }
+
+.hp-text {
+  color: #aabbcc;
+  font-size: 13px;
+}
+
+/* 敵方區域（右70%） */
+.battle-enemies {
+  width: 70%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+}
+
+.battle-enemy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 傷害跳字 */
+.dmg-popup {
+  position: absolute;
+  color: #e74c3c;
+  font-size: 22px;
+  font-weight: bold;
+  pointer-events: none;
+  animation: floatUp 0.8s ease-out forwards;
+}
+
+.dmg-popup.heal { color: #27ae60; }
+
+@keyframes floatUp {
+  0%   { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-40px); }
+}
+
+/* 資訊操作區 */
+.battle-bottom {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  background-color: #0d0d1a;
+  border-top: 2px solid #2a2a4a;
+}
+
+/* 左側：資訊面板 */
+.battle-info-panel {
+  width: 40%;
+  background-color: #0d0d1a;
+  border-right: 1px solid #2a2a4a;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px;
+  gap: 10px;
+}
+
+.info-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.info-tab {
+  padding: 4px 16px;
+  background-color: #2a2a4a;
+  border: 1px solid #3a3a6a;
+  border-radius: 4px;
+  color: #8899aa;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.info-tab.active {
+  background-color: #1a1a2e;
+  color: #e2c97e;
+  border-color: #c9a227;
+}
+
+.info-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 3px 0;
+  border-bottom: 1px solid #1a1a2e;
+}
+
+.info-row-label { color: #8899aa; }
+.info-row-value { color: #e2c97e; }
+
+.info-ailments {
+  font-size: 13px;
+  color: #8899aa;
+}
+
+#ailment-list { color: #aabbcc; }
+
+/* 右側：行動選單 */
+.battle-actions {
+  width: 60%;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 12px;
+  padding: 16px 24px;
+}
+
+.action-btn {
+  width: 200px;
+  height: 52px;
+  font-size: 16px;
+  letter-spacing: 1px;
+}
+
+.action-log {
+  width: 100%;
+  color: #8899aa;
+  font-size: 13px;
+  letter-spacing: 1px;
+  min-height: 20px;
+}

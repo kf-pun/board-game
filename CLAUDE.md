@@ -34,6 +34,11 @@ board-game/
   screen-battle、screen-upgrade、screen-event、
   screen-item、screen-shop、screen-result
 - 畫面初始化函式命名：initXxxScreen()
+### 戰鬥相關函式命名
+- playerAttack()：玩家攻擊邏輯
+- enemyTurn()：敵方行動邏輯
+- endBattle(result)：'win'或'lose'
+- initBattleScreen(enemies)：初始化戰鬥，傳入敵人陣列
 ## 色彩規範
 - 主背景：#1a1a2e
 - 次背景：#16213e
@@ -43,6 +48,8 @@ board-game/
 ## 已知注意事項
 - macOS 標題列佔用約 28px，畫面元素總高度勿超過 692px
 - html/body/.screen 高度一律使用 100vh
+- 測試用怪物攻擊力需高於玩家最高防禦力(15)
+- 戰鬥畫面分兩區：上方表演區(#1a1a2e)、下方操作區(#0d0d1a)
 ## 開發進度
 - [x] Electron 基礎框架
 - [x] 開始畫面

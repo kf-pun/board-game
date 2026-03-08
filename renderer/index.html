@@ -105,6 +105,70 @@
 
   </div>
 
+  <!-- 戰鬥畫面 -->
+  <div id="screen-battle" class="screen">
+
+    <!-- 頂部狀態列 -->
+    <div class="battle-status">
+      <span id="battle-round" class="battle-status-left">戰鬥回合 1</span>
+      <span id="battle-phase" class="battle-status-center">我方行動</span>
+      <div class="battle-status-right">
+        <button class="battle-icon-btn">📋</button>
+        <button class="battle-icon-btn">⚙️</button>
+      </div>
+    </div>
+
+    <!-- 戰鬥表演區 -->
+    <div class="battle-stage">
+
+      <!-- 左側：我方角色 -->
+      <div class="battle-player">
+        <div class="battle-sprite player-sprite" id="player-sprite"></div>
+        <div class="battle-name" id="player-name"></div>
+        <div class="hp-bar-wrap">
+          <div class="hp-bar" id="player-hp-bar"></div>
+        </div>
+        <div class="hp-text" id="player-hp-text"></div>
+      </div>
+
+      <!-- 右側：敵方區域 -->
+      <div class="battle-enemies" id="battle-enemies">
+        <!-- 敵人由 JS 動態生成 -->
+      </div>
+
+    </div>
+
+    <!-- 資訊操作區 -->
+    <div class="battle-bottom">
+
+      <!-- 左側：資訊面板 -->
+      <div class="battle-info-panel">
+        <div class="info-tabs">
+          <button class="info-tab active" id="tab-player" data-tab="player">我方</button>
+          <button class="info-tab" id="tab-enemy" data-tab="enemy">敵人</button>
+        </div>
+        <div class="info-content" id="info-content">
+          <!-- 由 JS 動態更新 -->
+        </div>
+        <div class="info-ailments">
+          <span class="ailment-label">狀態異常：</span>
+          <span id="ailment-list">無</span>
+        </div>
+      </div>
+
+      <!-- 右側：行動選單 -->
+      <div class="battle-actions">
+        <button class="btn btn-gold action-btn" id="btn-attack">普攻</button>
+        <button class="btn btn-gray action-btn" disabled>技能 1（空）</button>
+        <button class="btn btn-gray action-btn" disabled>技能 2（空）</button>
+        <button class="btn btn-gray action-btn" disabled>技能 3（空）</button>
+        <div class="action-log" id="action-log"></div>
+      </div>
+
+    </div>
+
+  </div>
+
   <script src="data/jobs.js"></script>
   <script src="game.js"></script>
 </body>
