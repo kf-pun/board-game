@@ -40,6 +40,11 @@ board-game/
 - endBattle(result)：'win'或'lose'
 - initBattleScreen(enemies)：初始化戰鬥，傳入敵人陣列
 - initUpgradeScreen(options)：初始化升級選擇，傳入選項陣列
+### 事件相關函式命名
+- startEvent()：隨機抽取事件並進入事件畫面
+- initEventScreen(event)：初始化事件畫面，傳入事件物件
+- resolveEventOption(event, index)：套用選項效果並顯示結果
+- continueAfterEvent()：返回棋盤並推進回合
 ## 色彩規範
 - 主背景：#1a1a2e
 - 次背景：#16213e
@@ -60,7 +65,7 @@ board-game/
 - [ ] 戰鬥畫面
 - [ ] 技能系統
 - [x] 升級選擇畫面
-- [ ] 事件畫面
+- [x] 事件畫面
 - [ ] 道具畫面
 - [ ] 商店畫面
 - [ ] 中Boss演出

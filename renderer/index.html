@@ -192,6 +192,30 @@
 
   </div>
 
+  <!-- 事件畫面 -->
+  <div id="screen-event" class="screen">
+
+    <!-- 左側場景區（35%） -->
+    <div class="event-scene" id="event-scene">
+      <div class="event-scene-emoji" id="event-scene-emoji"></div>
+      <div class="event-type-label" id="event-type-label"></div>
+    </div>
+
+    <!-- 右側文字選項區（65%） -->
+    <div class="event-panel">
+      <div class="event-title" id="event-title"></div>
+      <div class="event-desc" id="event-desc"></div>
+      <div class="event-options" id="event-options">
+        <!-- 選項按鈕由 JS 動態生成 -->
+      </div>
+      <div class="event-result" id="event-result">
+        <div class="event-result-text" id="event-result-text"></div>
+        <button class="btn btn-gold btn-wide" id="btn-event-continue">繼續前進</button>
+      </div>
+    </div>
+
+  </div>
+
   <script src="data/jobs.js"></script>
   <script src="game.js"></script>
 </body>

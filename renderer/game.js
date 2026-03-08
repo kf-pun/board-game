@@ -15,6 +15,77 @@ const STATUS_EFFECTS = {
   '冰凍': '跳過當回合行動'
 }
 
+// ===== 測試事件資料 =====
+const TEST_EVENTS = [
+  {
+    id: 'merchant',
+    type: '商人',
+    color: '#8e44ad',
+    emoji: '🧳',
+    title: '旅行商人',
+    desc: '一名旅行商人笑著攔住你：「客官！要看看我的珍貴寶物嗎？」',
+    options: [
+      {
+        text: '購買補給品（30 金幣）',
+        cost: { gold: 30 },
+        result: '你花費 30 金幣購買了補給品，恢復 30 HP！',
+        effect: { hp: 30 }
+      },
+      {
+        text: '隨便聊聊（免費）',
+        cost: null,
+        result: '商人感謝你耐心聆聽，臨別塞給你 10 金幣。',
+        effect: { gold: 10 }
+      }
+    ]
+  },
+  {
+    id: 'bandit',
+    type: '危險',
+    color: '#c0392b',
+    emoji: '⚠️',
+    title: '山賊攔路',
+    desc: '一群山賊突然從樹叢中跳出將你包圍！「把錢交出來，或者嚐嚐我們的厲害！」',
+    options: [
+      {
+        text: '正面迎戰（損失 20 HP）',
+        cost: null,
+        result: '激烈搏鬥後，你成功擊退了山賊！但也受了點傷。獲得 20 金幣作為戰利品。',
+        effect: { hp: -20, gold: 20 }
+      },
+      {
+        text: '拋出金幣逃脫（20 金幣）',
+        cost: { gold: 20 },
+        result: '趁山賊忙著搶錢的混亂，你迅速拔腿逃跑！',
+        effect: {}
+      }
+    ]
+  },
+  {
+    id: 'stone_tablet',
+    type: '神秘',
+    color: '#16213e',
+    borderColor: '#4a4a8a',
+    emoji: '🗿',
+    title: '古老石碑',
+    desc: '路旁矗立著一塊散發幽光的古老石碑，上面刻著難以辨識的遠古文字。',
+    options: [
+      {
+        text: '誦讀碑文',
+        cost: null,
+        result: '碑文中蘊藏著古老的智慧！你感到思緒豁然開朗，獲得 50 金幣。',
+        effect: { gold: 50 }
+      },
+      {
+        text: '無視石碑，繼續前行',
+        cost: null,
+        result: '你選擇不去招惹這神秘的石碑，繼續踏上旅途。',
+        effect: {}
+      }
+    ]
+  }
+]
+
 // ===== 格子類型定義 =====
 const CELL_TYPES = {
   start:   { label: '起點', icon: '🏁', color: '#f0c040' },
@@ -124,10 +195,11 @@ function initJobSelectScreen() {
     const confirmed = confirm(`確定選擇「${job.name}」作為你的職業嗎？`)
     if (confirmed) {
       gameState.selectedJob = job
+      gameState.playerCurrentHp = job.stats.hp  // 初始化 HP
       gameState.boardCells = generateBoard()
       gameState.playerPos = 0
       gameState.currentTurn = 1
-      gameState.gold = 0
+      gameState.gold = 50  // 測試用初始金幣
       showScreen('screen-board')
       renderBoard()
       updateBoardStatus()
@@ -256,6 +328,8 @@ function rollDice() {
 function triggerCellEvent(type) {
   if (type === 'battle') {
     startBattle()
+  } else if (type === 'event') {
+    startEvent()
   } else {
     const cellType = CELL_TYPES[type]
     alert(`觸發：${cellType.icon} ${cellType.label}格`)
@@ -623,6 +697,84 @@ function confirmUpgrade() {
   afterCellEvent()
 }
 
+// ===== 事件畫面 =====
+
+// 隨機抽取事件並進入事件畫面
+function startEvent() {
+  const event = TEST_EVENTS[Math.floor(Math.random() * TEST_EVENTS.length)]
+  initEventScreen(event)
+}
+
+// 初始化事件畫面
+function initEventScreen(event) {
+  // 左側場景區顏色
+  const sceneEl = document.getElementById('event-scene')
+  sceneEl.style.backgroundColor = event.color
+  sceneEl.style.border = event.borderColor ? `2px solid ${event.borderColor}` : 'none'
+  document.getElementById('event-scene-emoji').textContent = event.emoji
+  document.getElementById('event-type-label').textContent = event.type
+
+  // 右側文字
+  document.getElementById('event-title').textContent = event.title
+  document.getElementById('event-desc').textContent = event.desc
+
+  // 渲染選項按鈕
+  const optionsEl = document.getElementById('event-options')
+  optionsEl.innerHTML = ''
+  event.options.forEach((opt, i) => {
+    const btn = document.createElement('button')
+    btn.className = 'event-option-btn'
+    const goldShort = opt.cost?.gold
+    if (goldShort && gameState.gold < goldShort) {
+      btn.textContent = opt.text + '（金幣不足）'
+      btn.disabled = true
+    } else {
+      btn.textContent = opt.text
+      btn.addEventListener('click', () => resolveEventOption(event, i))
+    }
+    optionsEl.appendChild(btn)
+  })
+
+  // 隱藏結果區
+  document.getElementById('event-result').classList.remove('visible')
+
+  showScreen('screen-event')
+}
+
+// 選擇事件選項，套用效果並顯示結果
+function resolveEventOption(event, optionIndex) {
+  const opt = event.options[optionIndex]
+  const job = gameState.selectedJob
+
+  // 套用效果
+  if (opt.cost?.gold) {
+    gameState.gold = Math.max(0, gameState.gold - opt.cost.gold)
+  }
+  if (opt.effect.hp) {
+    gameState.playerCurrentHp = Math.min(
+      job.stats.hp,
+      Math.max(0, gameState.playerCurrentHp + opt.effect.hp)
+    )
+  }
+  if (opt.effect.gold) {
+    gameState.gold += opt.effect.gold
+  }
+
+  // 停用所有選項
+  document.querySelectorAll('.event-option-btn').forEach(btn => { btn.disabled = true })
+
+  // 顯示結果
+  document.getElementById('event-result-text').textContent = opt.result
+  document.getElementById('event-result').classList.add('visible')
+}
+
+// 繼續前進（返回棋盤）
+function continueAfterEvent() {
+  showScreen('screen-board')
+  updateBoardStatus()
+  afterCellEvent()
+}
+
 // 戰鬥畫面初始化
 function initBattleScreen() {
   document.getElementById('btn-attack').addEventListener('click', playerAttack)
@@ -637,6 +789,7 @@ function init() {
   initJobSelectScreen()
   initBoardScreen()
   initBattleScreen()
+  document.getElementById('btn-event-continue').addEventListener('click', continueAfterEvent)
 }
 
 init()
