@@ -21,6 +21,13 @@ const gameState = {
   playerPos: 0,
   boardCells: [],
   inventory: [null, null, null],
+  // 角色成長
+  playerLevel: 1,
+  playerExp: 0,
+  playerSkills: [],
+  // 升級選擇
+  pendingUpgradeOptions: [],
+  selectedUpgradeCard: null,
   // 戰鬥狀態
   playerCurrentHp: 0,
   battleRound: 1,
@@ -458,12 +465,131 @@ function enemyTurn() {
   setActionLog('你的回合')
 }
 
+// 下一級所需經驗（Lv1→2：100，每級+40）
+function getNextLevelExp(level) {
+  return 100 + (level - 1) * 40
+}
+
+// 測試用升級選項（暫時寫死）
+function getTestUpgradeOptions() {
+  return [
+    {
+      id: 'crack_strike',
+      emoji: '⚔️', name: '裂甲重擊',
+      type: '主動', tag: 'new',
+      desc: '造成攻擊力×180%傷害，附加裂甲2回合',
+      cd: 3
+    },
+    {
+      id: 'blood_rage',
+      emoji: '💢', name: '血怒',
+      type: '主動', tag: 'new',
+      desc: '獲得強化3層（2回合）',
+      cd: 4
+    },
+    {
+      id: 'fighting_spirit',
+      emoji: '💪', name: '鬥魂',
+      type: '被動', tag: 'new',
+      desc: 'HP低於30%時每回合自動獲得恢復1層',
+      cd: null
+    }
+  ]
+}
+
 // 戰鬥結束
 function endBattle(result) {
   if (result === 'win') {
+    // 暫時寫死經驗值，後續由怪物資料決定
+    gameState.playerExp += 100
+    const needed = getNextLevelExp(gameState.playerLevel)
+    if (gameState.playerExp >= needed) {
+      gameState.playerExp -= needed
+      gameState.playerLevel++
+      initUpgradeScreen(getTestUpgradeOptions())
+      return
+    }
     alert('戰鬥勝利！')
   } else {
     alert('戰鬥失敗！')
+  }
+  showScreen('screen-board')
+  afterCellEvent()
+}
+
+// ===== 升級選擇畫面 =====
+
+// 初始化升級畫面（每次觸發時呼叫）
+function initUpgradeScreen(options) {
+  gameState.pendingUpgradeOptions = options
+  gameState.selectedUpgradeCard = null
+
+  // 更新等級文字
+  document.getElementById('upgrade-level-text').textContent =
+    `⭐ 升級！Lv.${gameState.playerLevel - 1} → Lv.${gameState.playerLevel}`
+
+  // 渲染技能持有欄（最多3格）
+  const skillsBar = document.getElementById('upgrade-skills-bar')
+  skillsBar.innerHTML = ''
+  for (let i = 0; i < 3; i++) {
+    const skill = gameState.playerSkills[i]
+    const slot = document.createElement('div')
+    slot.className = 'upgrade-skill-slot ' + (skill ? 'has-skill' : 'empty-slot')
+    slot.textContent = skill ? `${skill.emoji} ${skill.name}` : '空'
+    skillsBar.appendChild(slot)
+  }
+
+  // 渲染選項卡片
+  const cardsEl = document.getElementById('upgrade-cards')
+  cardsEl.innerHTML = ''
+  options.forEach((opt, i) => {
+    const card = document.createElement('div')
+    card.className = 'upgrade-card'
+
+    let tagHtml = ''
+    if (opt.tag === 'new')     tagHtml = '<span class="tag tag-new">NEW</span>'
+    else if (opt.tag === 'upgrade') tagHtml = `<span class="tag tag-upgrade">Lv.${opt.currentLv}→${opt.currentLv + 1}</span>`
+    else if (opt.tag === 'max') tagHtml = '<span class="tag tag-max">MAX</span>'
+
+    const cdHtml = (opt.type === '主動' && opt.cd)
+      ? `<div class="upgrade-card-cd">⏱ CD：${opt.cd}回合</div>`
+      : ''
+
+    card.innerHTML = `
+      <div class="upgrade-card-title">${opt.emoji} ${opt.name}</div>
+      <div class="upgrade-card-tags">
+        <span class="tag tag-type">${opt.type}</span>
+        ${tagHtml}
+      </div>
+      <div class="upgrade-card-desc">${opt.desc}</div>
+      ${cdHtml}
+    `
+    card.addEventListener('click', () => selectUpgradeCard(i))
+    cardsEl.appendChild(card)
+  })
+
+  // 重置確認按鈕
+  const confirmBtn = document.getElementById('btn-confirm-upgrade')
+  confirmBtn.disabled = true
+  confirmBtn.onclick = confirmUpgrade
+
+  showScreen('screen-upgrade')
+}
+
+// 選擇卡片
+function selectUpgradeCard(index) {
+  gameState.selectedUpgradeCard = index
+  document.querySelectorAll('.upgrade-card').forEach((card, i) => {
+    card.classList.toggle('selected', i === index)
+  })
+  document.getElementById('btn-confirm-upgrade').disabled = false
+}
+
+// 確認選擇
+function confirmUpgrade() {
+  const selected = gameState.pendingUpgradeOptions[gameState.selectedUpgradeCard]
+  if (selected && gameState.playerSkills.length < 3) {
+    gameState.playerSkills.push(selected)
   }
   showScreen('screen-board')
   afterCellEvent()

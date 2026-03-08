@@ -681,3 +681,135 @@ html, body {
   letter-spacing: 1px;
   min-height: 20px;
 }
+
+/* ===== 升級選擇畫面 ===== */
+#screen-upgrade {
+  background-color: #1a1a2e;
+}
+
+/* 頂部（80px） */
+.upgrade-header {
+  height: 80px;
+  background-color: #0f0f23;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.upgrade-level-text {
+  color: #f0c040;
+  font-size: 22px;
+  font-weight: bold;
+  letter-spacing: 4px;
+}
+
+.upgrade-skills-bar {
+  display: flex;
+  gap: 8px;
+}
+
+.upgrade-skill-slot {
+  padding: 2px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+.upgrade-skill-slot.has-skill {
+  background-color: #c9a227;
+  color: #1a1a2e;
+  font-weight: bold;
+}
+
+.upgrade-skill-slot.empty-slot {
+  background-color: #2a2a4a;
+  color: #556677;
+}
+
+/* 中央卡片區 */
+.upgrade-cards {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px 48px;
+}
+
+/* 技能卡片 */
+.upgrade-card {
+  flex: 1;
+  max-width: 340px;
+  height: 320px;
+  background-color: #16213e;
+  border: 1px solid #c9a227;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.upgrade-card:hover {
+  border-color: #f0c040;
+  transform: translateY(-4px);
+}
+
+.upgrade-card.selected {
+  border-color: #ffffff;
+  border-width: 2px;
+}
+
+.upgrade-card-title {
+  font-size: 24px;
+  color: #ffffff;
+  letter-spacing: 2px;
+}
+
+.upgrade-card-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* 標籤 */
+.tag {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.tag-type    { background-color: #2a2a4a; color: #aabbcc; }
+.tag-new     { background-color: #1e6b3e; color: #5dde88; }
+.tag-upgrade { background-color: #1a3a6e; color: #5b9fef; }
+.tag-max     { background-color: #5a3a00; color: #f0c040; }
+
+.upgrade-card-desc {
+  flex: 1;
+  color: #aabbcc;
+  font-size: 14px;
+  line-height: 1.6;
+  letter-spacing: 1px;
+}
+
+.upgrade-card-cd {
+  color: #8899aa;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+/* 底部（60px） */
+.upgrade-footer {
+  height: 60px;
+  background-color: #0f0f23;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
