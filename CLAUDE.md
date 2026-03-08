@@ -1,109 +1,50 @@
-# CLAUDE.md — board-game 專案規範
-
+# CLAUDE.md
 ## 專案簡介
-大富翁形式的單人 RPG 桌面遊戲。
-使用 Electron 打包，目標上架 Steam。
-玩家選擇職業，在棋盤上移動觸發事件、戰鬥、收集道具，
-最終挑戰 Boss。支援多周目成長系統。
-
+Electron 桌面遊戲，目標上架 Steam。
+大富翁形式單人 RPG，玩家選職業在棋盤冒險挑戰 Boss。
 ## 技術規範
-- Electron + HTML + CSS + JS
-- renderer 資料夾內為遊戲畫面邏輯
-- main.js 為 Electron 主程序，非必要不修改
-- preload.js 為橋接層，非必要不修改
-- 不使用任何前端框架或套件
-- 所有檔案使用 UTF-8 編碼
-- JS 使用 ES6 語法
-- 視窗固定解析度 1280×720
-
+- Electron + HTML + CSS + JS，無任何前端框架
+- 視窗 1280×720，畫面高度使用 100vh（非 720px）
+- 所有檔案 UTF-8，JS 使用 ES6
 ## 檔案結構
 board-game/
-  main.js
-  preload.js
-  package.json
+  main.js          → Electron 主程序，勿修改
+  preload.js       → 橋接層，勿修改
   renderer/
-    index.html
-    style.css
-    game.js
+    index.html     → 畫面 DOM 結構
+    style.css      → 所有樣式
+    game.js        → 遊戲邏輯
     data/
-      jobs.js
-      skills.js
-      events.js
-      items.js
-  assets/
-    images/
-    sounds/
+      jobs.js      → 職業資料
+      skills.js    → 技能邏輯
+      events.js    → 事件資料
+      items.js     → 道具資料
   CLAUDE.md
-  README.md
-
+  SPEC.md
 ## 開發規範
-
-### 回應方式
-- 回應使用繁體中文
-- 程式碼內的註解使用繁體中文
-- 每次修改前先說明要做什麼再動手
-- 修改完成後簡短說明做了什麼
-
-### Token 節省原則
-- 不重複解釋已知內容
-- 不產生不必要的說明文字
-- 修改現有檔案時只顯示修改的部分
-- 不主動詢問已在規範中說明的事項
-- 每次開始工作前先讀取 CLAUDE.md
-
-### 程式碼規範
-- 變數與函式命名使用英文駝峰式
-- 每個函式只做一件事
-- 相關功能集中在同一區塊並加上註解標題
-- 避免重複程式碼，共用邏輯抽成函式
-- 所有遊戲狀態集中在 gameState 物件管理
+- 回應與註解使用繁體中文
+- 修改前說明要做什麼，完成後簡短說明結果
+- 修改檔案時只顯示修改的部分
+- 每次開始前先讀取 CLAUDE.md
+## 程式碼規範
+- 命名：英文駝峰式
 - 遊戲狀態統一存放在 gameState 物件
+- 畫面切換使用 showScreen(screenId)
+- 畫面 ID：screen-start、screen-job-select、screen-board、
+  screen-battle、screen-upgrade、screen-event、
+  screen-item、screen-shop、screen-result
 - 畫面初始化函式命名：initXxxScreen()
-- 事件綁定統一在各畫面 init 函式內處理
-
-### 畫面開發規範
-- Prototype 階段不使用任何圖片
-- 角色與怪物以色塊 + 文字代替
-- 動畫效果以簡單 CSS transition 實作
-- 所有畫面固定 1280×720 解析度
-- 畫面切換以顯示/隱藏 div 實作
-
-### macOS Electron 高度注意事項
-- macOS 標題列（traffic lights）會佔用部分視窗高度
-- 畫面高度使用 `height: 100vh` 而非固定 720px
-- `100vh` 會自動對應 Electron 實際可用內容區域
-- 各畫面設計時元素總高度以 `flex` 填滿 viewport，不寫死像素
-
-### 已完成畫面規範
-- 畫面切換：以 showScreen(screenId) 函式控制
-- 畫面ID命名：screen-start、screen-job-select、screen-board、screen-battle、screen-upgrade、screen-event、screen-item、screen-shop、screen-result
-- 背景色：主色 #1a1a2e、次色 #16213e
-- 強調色：金色 #f0c040
-- 按鈕 disabled 樣式：背景 #2a2a4a、文字 #666
-
-### 資料結構規範
-- 職業資料存放於 data/jobs.js
-- 技能資料存放於 data/skills.js
-- 事件劇本存放於 data/events.js
-- 道具資料存放於 data/items.js
-- 所有資料以 JS 物件或陣列格式儲存
-- 資料與邏輯分離，data 資料夾只存資料
-
-### Electron 規範
-- main.js 負責視窗建立，非必要不修改
-- preload.js 負責橋接，非必要不修改
-- renderer 內的程式碼不可直接使用 Node.js API
-- 需要系統功能時透過 preload.js 橋接
-
-### Git 規範
-- 每完成一個功能才 commit
-- commit 訊息格式：「功能：說明」
-  例：「棋盤：新增32格環狀顯示」
-  例：「戰鬥：新增普通攻擊邏輯」
-- 不 commit 未完成的功能
-
-## 目前開發進度
-- [ ] Electron 基礎框架
+## 色彩規範
+- 主背景：#1a1a2e
+- 次背景：#16213e
+- 頂底列：#0f0f23
+- 強調金色：#f0c040
+- disabled：背景 #2a2a4a、文字 #666
+## 已知注意事項
+- macOS 標題列佔用約 28px，畫面元素總高度勿超過 692px
+- html/body/.screen 高度一律使用 100vh
+## 開發進度
+- [x] Electron 基礎框架
 - [x] 開始畫面
 - [x] 職業選擇畫面
 - [x] 棋盤主畫面
@@ -117,11 +58,8 @@ board-game/
 - [ ] 中Boss演出
 - [ ] 最終Boss演出
 - [ ] 結算畫面
+- [ ] 開始畫面（含存檔判斷）
 - [ ] 周目解鎖商店
-
-## 注意事項
-- 本專案目前為 Prototype 階段，以功能完整為優先
-- 視覺美化留待後期處理
-- 每個功能完成後更新上方開發進度
-- 啟動專案：npm start
-- 打包專案：npm run build
+## Git 規範
+- 每完成一個功能才 commit
+- 格式：「功能：說明」
