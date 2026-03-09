@@ -238,7 +238,32 @@
 
   </div>
 
+  <!-- 道具畫面 -->
+  <div id="screen-item" class="screen">
+
+    <!-- 頂部：當前道具欄（3格） -->
+    <div class="item-header">
+      <div class="item-header-label">道具欄</div>
+      <div class="item-slots" id="item-slots">
+        <!-- 由 JS 動態生成 -->
+      </div>
+    </div>
+
+    <!-- 中央：三張道具卡片 -->
+    <div class="item-cards" id="item-cards">
+      <!-- 由 JS 動態生成 -->
+    </div>
+
+    <!-- 底部：確認與放棄按鈕 -->
+    <div class="item-footer">
+      <button class="btn btn-gold btn-wide" id="btn-confirm-item" disabled>放入道具欄</button>
+      <button class="btn btn-gray btn-skip" id="btn-skip-item">放棄不選擇</button>
+    </div>
+
+  </div>
+
   <script src="data/jobs.js"></script>
+  <script src="data/items.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

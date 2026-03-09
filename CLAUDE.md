@@ -44,6 +44,7 @@ board-game/
 - inventory：道具欄3格（預設null）
 - battleRound / battlePhase / enemies / activeInfoTab：戰鬥狀態
 - pendingUpgradeOptions / selectedUpgradeCard：升級選擇暫存
+- pendingItemOptions / selectedItemCard / itemDiscardMode：道具選擇暫存與丟棄旗標
 ### 棋盤相關函式命名
 - rollDice()：擲骰子並移動角色
 - triggerCellEvent(type)：依格子類型觸發對應畫面或邏輯
@@ -59,6 +60,13 @@ board-game/
 - initEventScreen(event)：初始化事件畫面，傳入事件物件
 - resolveEventOption(event, index)：套用選項效果並顯示結果
 - continueAfterEvent()：返回棋盤並推進回合
+### 道具相關函式命名
+- startItem()：隨機抽3個不重複道具並進入道具畫面
+- initItemScreen(items)：初始化道具畫面，傳入道具陣列（3個）
+- renderItemSlots(discardMode)：渲染頂部道具欄，discardMode=true 時加丟棄點擊
+- selectItemCard(index)：選擇卡片，道具欄已滿時進入丟棄模式
+- confirmItem()：放入空欄或觸發丟棄流程
+- afterItemScreen()：重置狀態，返回棋盤並推進回合
 ## 色彩規範
 - 主背景：#1a1a2e
 - 次背景：#16213e
@@ -81,7 +89,7 @@ board-game/
 - [ ] 技能系統
 - [x] 升級選擇畫面
 - [x] 事件畫面
-- [ ] 道具畫面
+- [x] 道具畫面
 - [ ] 商店畫面
 - [ ] 中Boss演出
 - [ ] 最終Boss演出

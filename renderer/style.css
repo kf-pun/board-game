@@ -944,6 +944,155 @@ html, body {
   letter-spacing: 1px;
 }
 
+/* ===== 道具畫面 ===== */
+#screen-item {
+  background-color: #1a1a2e;
+}
+
+/* 頂部道具欄（80px） */
+.item-header {
+  height: 80px;
+  background-color: #0f0f23;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  flex-shrink: 0;
+  padding: 0 48px;
+}
+
+.item-header-label {
+  color: #8899aa;
+  font-size: 14px;
+  letter-spacing: 2px;
+  flex-shrink: 0;
+}
+
+.item-slots {
+  display: flex;
+  gap: 12px;
+}
+
+.item-slot {
+  width: 180px;
+  height: 48px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  letter-spacing: 1px;
+  transition: background-color 0.15s;
+}
+
+.item-slot.has-item {
+  background-color: #1e3a5f;
+  color: #aabbcc;
+  border: 1px solid #2a5a8a;
+}
+
+.item-slot.empty-slot {
+  background-color: #2a2a4a;
+  color: #445566;
+  border: 1px dashed #3a3a6a;
+}
+
+.item-slot.discard-mode {
+  background-color: #5a1a1a;
+  color: #ffaaaa;
+  border: 1px solid #c0392b;
+  cursor: pointer;
+}
+
+.item-slot.discard-mode:hover {
+  background-color: #7a2a2a;
+}
+
+/* 中央卡片區 */
+.item-cards {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 32px 64px;
+}
+
+/* 道具卡片 */
+.item-card {
+  flex: 1;
+  max-width: 300px;
+  min-height: 240px;
+  background-color: #16213e;
+  border: 1px solid #3a3a6a;
+  border-radius: 12px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.item-card:hover {
+  border-color: #c9a227;
+  transform: translateY(-4px);
+}
+
+.item-card.selected {
+  border-color: #ffffff;
+  border-width: 2px;
+}
+
+.item-card-emoji {
+  font-size: 48px;
+  line-height: 1;
+}
+
+.item-card-name {
+  font-size: 20px;
+  color: #ffffff;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.item-card-tag {
+  padding: 3px 14px;
+  border-radius: 12px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  border: 1px solid;
+}
+
+.item-card-desc {
+  flex: 1;
+  color: #aabbcc;
+  font-size: 14px;
+  line-height: 1.7;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+}
+
+/* 底部（80px） */
+.item-footer {
+  height: 80px;
+  background-color: #0f0f23;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  flex-shrink: 0;
+}
+
+.btn-skip {
+  width: 200px;
+  height: 56px;
+  font-size: 15px;
+}
+
 /* ===== GM Tools（開發用，上線前移除） ===== */
 .gm-panel {
   display: none;

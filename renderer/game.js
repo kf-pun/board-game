@@ -116,6 +116,10 @@ const gameState = {
   // 升級選擇
   pendingUpgradeOptions: [],
   selectedUpgradeCard: null,
+  // 道具選擇
+  pendingItemOptions: [],
+  selectedItemCard: null,
+  itemDiscardMode: false,
   // 戰鬥狀態
   playerCurrentHp: 0,
   battleRound: 1,
@@ -330,6 +334,8 @@ function triggerCellEvent(type) {
     startBattle()
   } else if (type === 'event') {
     startEvent()
+  } else if (type === 'item') {
+    startItem()
   } else {
     const cellType = CELL_TYPES[type]
     alert(`觸發：${cellType.icon} ${cellType.label}格`)
@@ -775,6 +781,123 @@ function continueAfterEvent() {
   afterCellEvent()
 }
 
+// ===== 道具畫面 =====
+
+// timing 對應標籤顏色
+const ITEM_TIMING_COLOR = {
+  instant: '#f0c040',
+  battle:  '#e74c3c',
+  board:   '#27ae60'
+}
+
+// 隨機抽取3個不重複道具
+function startItem() {
+  const shuffled = [...TEST_ITEMS].sort(() => Math.random() - 0.5)
+  initItemScreen(shuffled.slice(0, 3))
+}
+
+// 渲染頂部道具欄（discardMode=true 時加可點擊丟棄樣式）
+function renderItemSlots(discardMode) {
+  const slotsEl = document.getElementById('item-slots')
+  slotsEl.innerHTML = ''
+  gameState.inventory.forEach((item, i) => {
+    const slot = document.createElement('div')
+    slot.className = 'item-slot ' + (item ? 'has-item' : 'empty-slot')
+    if (discardMode && item) {
+      slot.classList.add('discard-mode')
+      slot.textContent = `${item.emoji} ${item.name}`
+      slot.addEventListener('click', () => {
+        const selected = gameState.pendingItemOptions[gameState.selectedItemCard]
+        gameState.inventory[i] = selected
+        afterItemScreen()
+      })
+    } else {
+      slot.textContent = item ? `${item.emoji} ${item.name}` : '空'
+    }
+    slotsEl.appendChild(slot)
+  })
+}
+
+// 初始化道具畫面
+function initItemScreen(items) {
+  gameState.pendingItemOptions = items
+  gameState.selectedItemCard = null
+  gameState.itemDiscardMode = false
+
+  renderItemSlots(false)
+
+  // 渲染三張道具卡片
+  const cardsEl = document.getElementById('item-cards')
+  cardsEl.innerHTML = ''
+  items.forEach((item, i) => {
+    const card = document.createElement('div')
+    card.className = 'item-card'
+    const tagColor = ITEM_TIMING_COLOR[item.timing] || '#aabbcc'
+    card.innerHTML = `
+      <div class="item-card-emoji">${item.emoji}</div>
+      <div class="item-card-name">${item.name}</div>
+      <div class="item-card-tag" style="background-color:${tagColor}20;color:${tagColor};border-color:${tagColor}60">${item.timingLabel}</div>
+      <div class="item-card-desc">${item.desc}</div>
+    `
+    card.addEventListener('click', () => selectItemCard(i))
+    cardsEl.appendChild(card)
+  })
+
+  // 重置確認按鈕
+  const confirmBtn = document.getElementById('btn-confirm-item')
+  confirmBtn.textContent = '放入道具欄'
+  confirmBtn.disabled = true
+  confirmBtn.onclick = confirmItem
+
+  showScreen('screen-item')
+}
+
+// 選擇道具卡片
+function selectItemCard(index) {
+  gameState.selectedItemCard = index
+  document.querySelectorAll('.item-card').forEach((card, i) => {
+    card.classList.toggle('selected', i === index)
+  })
+  const confirmBtn = document.getElementById('btn-confirm-item')
+  const isFull = gameState.inventory.every(slot => slot !== null)
+  if (isFull) {
+    confirmBtn.textContent = '選擇後丟棄'
+    gameState.itemDiscardMode = true
+  } else {
+    confirmBtn.textContent = '放入道具欄'
+    gameState.itemDiscardMode = false
+  }
+  confirmBtn.disabled = false
+}
+
+// 確認選擇道具
+function confirmItem() {
+  const selected = gameState.pendingItemOptions[gameState.selectedItemCard]
+  if (!selected) return
+
+  if (!gameState.itemDiscardMode) {
+    // 道具欄有空位，直接放入
+    const emptyIdx = gameState.inventory.findIndex(s => s === null)
+    gameState.inventory[emptyIdx] = selected
+    afterItemScreen()
+  } else {
+    // 道具欄已滿 → 進入丟棄模式，讓玩家點擊要替換的格子
+    renderItemSlots(true)
+    const confirmBtn = document.getElementById('btn-confirm-item')
+    confirmBtn.textContent = '請選擇要丟棄的道具'
+    confirmBtn.disabled = true
+  }
+}
+
+// 道具畫面結束，返回棋盤
+function afterItemScreen() {
+  gameState.selectedItemCard = null
+  gameState.itemDiscardMode = false
+  showScreen('screen-board')
+  updateBoardStatus()
+  afterCellEvent()
+}
+
 // 戰鬥畫面初始化
 function initBattleScreen() {
   document.getElementById('btn-attack').addEventListener('click', playerAttack)
@@ -796,7 +919,7 @@ function initGmTools() {
 
   // 觸發格子類型
   document.getElementById('gm-battle').addEventListener('click', () => { hide(); startBattle() })
-  document.getElementById('gm-item').addEventListener('click', () => { hide(); alert('觸發：🎁 道具格'); afterCellEvent() })
+  document.getElementById('gm-item').addEventListener('click', () => { hide(); startItem() })
   document.getElementById('gm-event').addEventListener('click', () => { hide(); startEvent() })
   document.getElementById('gm-shop').addEventListener('click', () => { hide(); alert('觸發：🏪 商店格'); afterCellEvent() })
   document.getElementById('gm-trap').addEventListener('click', () => { hide(); alert('觸發：💀 陷阱格'); afterCellEvent() })
@@ -827,6 +950,9 @@ function init() {
   initBattleScreen()
   initGmTools()
   document.getElementById('btn-event-continue').addEventListener('click', continueAfterEvent)
+  document.getElementById('btn-skip-item').addEventListener('click', () => {
+    if (confirm('確定放棄本次道具？')) afterItemScreen()
+  })
 }
 
 init()
