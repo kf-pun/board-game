@@ -120,6 +120,10 @@ const gameState = {
   pendingItemOptions: [],
   selectedItemCard: null,
   itemDiscardMode: false,
+  // 商店
+  currentShopItems: [],
+  shopDiscardMode: false,
+  pendingShopItem: null,
   // 戰鬥狀態
   playerCurrentHp: 0,
   battleRound: 1,
@@ -336,6 +340,8 @@ function triggerCellEvent(type) {
     startEvent()
   } else if (type === 'item') {
     startItem()
+  } else if (type === 'shop') {
+    startShop()
   } else {
     const cellType = CELL_TYPES[type]
     alert(`觸發：${cellType.icon} ${cellType.label}格`)
@@ -898,6 +904,139 @@ function afterItemScreen() {
   afterCellEvent()
 }
 
+// ===== 商店畫面 =====
+
+// 隨機抽取 4 個道具（允許重複），各自隨機定價 20~50 金幣
+function startShop() {
+  gameState.currentShopItems = Array.from({ length: 4 }, () => {
+    const item = TEST_ITEMS[Math.floor(Math.random() * TEST_ITEMS.length)]
+    const price = 20 + Math.floor(Math.random() * 31)  // 20~50
+    return { ...item, price, purchased: false }
+  })
+  gameState.shopDiscardMode = false
+  gameState.pendingShopItem = null
+  initShopScreen()
+}
+
+// 渲染商店頂部道具欄（discardMode=true 時格子可點擊替換）
+function renderShopInventory(discardMode) {
+  const slotsEl = document.getElementById('shop-item-slots')
+  slotsEl.innerHTML = ''
+  gameState.inventory.forEach((item, i) => {
+    const slot = document.createElement('div')
+    slot.className = 'item-slot ' + (item ? 'has-item' : 'empty-slot')
+    if (discardMode && item) {
+      slot.classList.add('discard-mode')
+      slot.textContent = `${item.emoji} ${item.name}`
+      slot.addEventListener('click', () => {
+        // 替換此格，結束丟棄模式
+        gameState.inventory[i] = gameState.pendingShopItem
+        gameState.pendingShopItem = null
+        gameState.shopDiscardMode = false
+        renderShopInventory(false)
+        updateShopBtns()
+        document.getElementById('btn-leave-shop').disabled = false
+      })
+    } else {
+      slot.textContent = item ? `${item.emoji} ${item.name}` : '空'
+    }
+    slotsEl.appendChild(slot)
+  })
+}
+
+// 更新所有購買按鈕狀態（金幣不足 / 已售出 / 可購買）
+function updateShopBtns() {
+  gameState.currentShopItems.forEach((shopItem, i) => {
+    const btn = document.getElementById(`shop-buy-${i}`)
+    if (!btn) return
+    if (shopItem.purchased) {
+      btn.textContent = '已售出'
+      btn.disabled = true
+      btn.classList.remove('can-buy')
+    } else if (gameState.gold < shopItem.price) {
+      btn.textContent = `${shopItem.price} G`
+      btn.disabled = true
+      btn.classList.remove('can-buy')
+    } else {
+      btn.textContent = `${shopItem.price} G`
+      btn.disabled = false
+      btn.classList.add('can-buy')
+    }
+  })
+}
+
+// 初始化商店畫面
+function initShopScreen() {
+  // 更新金幣顯示
+  document.getElementById('shop-gold-amount').textContent = gameState.gold
+
+  // 渲染頂部道具欄
+  renderShopInventory(false)
+
+  // 渲染商品列表（4 列）
+  const listEl = document.getElementById('shop-list')
+  listEl.innerHTML = ''
+  gameState.currentShopItems.forEach((shopItem, i) => {
+    const row = document.createElement('div')
+    row.className = 'shop-row'
+    const tagColor = ITEM_TIMING_COLOR[shopItem.timing] || '#aabbcc'
+    row.innerHTML = `
+      <div class="shop-row-emoji">${shopItem.emoji}</div>
+      <div class="shop-row-info">
+        <div class="shop-row-name">${shopItem.name}</div>
+        <div class="shop-row-desc">${shopItem.desc}</div>
+      </div>
+      <div class="shop-row-tag" style="background-color:${tagColor}20;color:${tagColor};border-color:${tagColor}60">${shopItem.timingLabel}</div>
+      <button class="shop-buy-btn" id="shop-buy-${i}">${shopItem.price} G</button>
+    `
+    row.querySelector(`#shop-buy-${i}`).addEventListener('click', () => buyItem(i))
+    listEl.appendChild(row)
+  })
+
+  updateShopBtns()
+  document.getElementById('btn-leave-shop').disabled = false
+  showScreen('screen-shop')
+}
+
+// 購買道具
+function buyItem(index) {
+  const shopItem = gameState.currentShopItems[index]
+  if (!shopItem || shopItem.purchased) return
+  if (gameState.gold < shopItem.price) return
+  if (!confirm(`確定購買「${shopItem.name}」（${shopItem.price} 金幣）？`)) return
+
+  // 扣款 & 標記已購
+  gameState.gold -= shopItem.price
+  shopItem.purchased = true
+  document.getElementById('shop-gold-amount').textContent = gameState.gold
+
+  // 取得純道具資料（去掉 price / purchased 欄位）
+  const { price, purchased, ...itemData } = shopItem
+
+  const emptyIdx = gameState.inventory.findIndex(s => s === null)
+  if (emptyIdx !== -1) {
+    // 有空位，直接放入
+    gameState.inventory[emptyIdx] = itemData
+    renderShopInventory(false)
+    updateShopBtns()
+  } else {
+    // 道具欄已滿 → 進入丟棄模式，讓玩家點擊要替換的格子
+    gameState.pendingShopItem = itemData
+    gameState.shopDiscardMode = true
+    renderShopInventory(true)
+    updateShopBtns()
+    document.getElementById('btn-leave-shop').disabled = true
+  }
+}
+
+// 離開商店
+function leaveShop() {
+  if (gameState.shopDiscardMode) return  // 丟棄模式防呆，不可離開
+  showScreen('screen-board')
+  updateBoardStatus()
+  afterCellEvent()
+}
+
 // 戰鬥畫面初始化
 function initBattleScreen() {
   document.getElementById('btn-attack').addEventListener('click', playerAttack)
@@ -921,7 +1060,7 @@ function initGmTools() {
   document.getElementById('gm-battle').addEventListener('click', () => { hide(); startBattle() })
   document.getElementById('gm-item').addEventListener('click', () => { hide(); startItem() })
   document.getElementById('gm-event').addEventListener('click', () => { hide(); startEvent() })
-  document.getElementById('gm-shop').addEventListener('click', () => { hide(); alert('觸發：🏪 商店格'); afterCellEvent() })
+  document.getElementById('gm-shop').addEventListener('click', () => { hide(); startShop() })
   document.getElementById('gm-trap').addEventListener('click', () => { hide(); alert('觸發：💀 陷阱格'); afterCellEvent() })
   document.getElementById('gm-bless').addEventListener('click', () => { hide(); alert('觸發：✨ 祝福格'); afterCellEvent() })
 
@@ -953,6 +1092,7 @@ function init() {
   document.getElementById('btn-skip-item').addEventListener('click', () => {
     if (confirm('確定放棄本次道具？')) afterItemScreen()
   })
+  document.getElementById('btn-leave-shop').addEventListener('click', leaveShop)
 }
 
 init()

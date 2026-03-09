@@ -262,6 +262,30 @@
 
   </div>
 
+  <!-- 商店畫面 -->
+  <div id="screen-shop" class="screen">
+
+    <!-- 頂部：金幣 + 道具欄 -->
+    <div class="shop-header">
+      <div class="shop-gold">💰 金幣：<span id="shop-gold-amount">0</span></div>
+      <div class="shop-inventory-label">道具欄</div>
+      <div class="item-slots" id="shop-item-slots">
+        <!-- 由 JS 動態生成 -->
+      </div>
+    </div>
+
+    <!-- 中央：商品列表（4列） -->
+    <div class="shop-list" id="shop-list">
+      <!-- 由 JS 動態生成 -->
+    </div>
+
+    <!-- 底部：離開按鈕 -->
+    <div class="shop-footer">
+      <button class="btn btn-gray btn-wide" id="btn-leave-shop">離開商店</button>
+    </div>
+
+  </div>
+
   <script src="data/jobs.js"></script>
   <script src="data/items.js"></script>
   <script src="game.js"></script>

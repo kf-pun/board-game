@@ -45,6 +45,8 @@ board-game/
 - battleRound / battlePhase / enemies / activeInfoTab：戰鬥狀態
 - pendingUpgradeOptions / selectedUpgradeCard：升級選擇暫存
 - pendingItemOptions / selectedItemCard / itemDiscardMode：道具選擇暫存與丟棄旗標
+- currentShopItems：商店當次商品陣列（含 price / purchased 欄位）
+- shopDiscardMode / pendingShopItem：商店丟棄模式旗標與待放入道具
 ### 棋盤相關函式命名
 - rollDice()：擲骰子並移動角色
 - triggerCellEvent(type)：依格子類型觸發對應畫面或邏輯
@@ -67,6 +69,13 @@ board-game/
 - selectItemCard(index)：選擇卡片，道具欄已滿時進入丟棄模式
 - confirmItem()：放入空欄或觸發丟棄流程
 - afterItemScreen()：重置狀態，返回棋盤並推進回合
+### 商店相關函式命名
+- startShop()：隨機抽4個道具（允許重複）並定價，呼叫 initShopScreen()
+- renderShopInventory(discardMode)：渲染商店頂部道具欄，丟棄模式時格子可點擊替換
+- updateShopBtns()：依金幣與已購狀態更新所有購買按鈕
+- initShopScreen()：初始化商店畫面（金幣、道具欄、商品列表）
+- buyItem(index)：二次確認後扣款，有空欄直接放入，滿欄進入丟棄模式
+- leaveShop()：丟棄模式防呆，返回棋盤並推進回合
 ## 色彩規範
 - 主背景：#1a1a2e
 - 次背景：#16213e
@@ -90,7 +99,7 @@ board-game/
 - [x] 升級選擇畫面
 - [x] 事件畫面
 - [x] 道具畫面
-- [ ] 商店畫面
+- [x] 商店畫面
 - [ ] 中Boss演出
 - [ ] 最終Boss演出
 - [ ] 結算畫面

@@ -1093,6 +1093,137 @@ html, body {
   font-size: 15px;
 }
 
+/* ===== 商店畫面 ===== */
+#screen-shop {
+  background-color: #1a1a2e;
+}
+
+/* 頂部：金幣 + 道具欄（80px） */
+.shop-header {
+  height: 80px;
+  background-color: #0f0f23;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 48px;
+  flex-shrink: 0;
+  border-bottom: 1px solid #2a2a4a;
+}
+
+.shop-gold {
+  color: #f0c040;
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+  min-width: 140px;
+}
+
+.shop-inventory-label {
+  color: #8899aa;
+  font-size: 14px;
+  letter-spacing: 2px;
+  flex-shrink: 0;
+}
+
+/* 中央商品列表（flex:1，4列均分） */
+.shop-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.shop-row {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 48px;
+  gap: 20px;
+  border-bottom: 1px solid #2a2a4a;
+}
+
+.shop-row:nth-child(odd)  { background-color: #16213e; }
+.shop-row:nth-child(even) { background-color: #1a1a2e; }
+.shop-row:last-child      { border-bottom: none; }
+
+.shop-row-emoji {
+  font-size: 36px;
+  width: 52px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.shop-row-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.shop-row-name {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.shop-row-desc {
+  color: #8899aa;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+.shop-row-tag {
+  padding: 3px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  border: 1px solid;
+  flex-shrink: 0;
+}
+
+/* 購買按鈕 */
+.shop-buy-btn {
+  width: 150px;
+  height: 44px;
+  font-size: 14px;
+  font-family: inherit;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 1px;
+  font-weight: bold;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+
+.shop-buy-btn.can-buy {
+  background-color: #c9a227;
+  color: #1a1a2e;
+}
+
+.shop-buy-btn.can-buy:hover {
+  opacity: 0.85;
+}
+
+.shop-buy-btn:disabled {
+  background-color: #2a2a4a;
+  color: #666;
+  cursor: not-allowed;
+}
+
+/* 底部：離開按鈕（70px） */
+.shop-footer {
+  height: 70px;
+  background-color: #0f0f23;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-top: 1px solid #2a2a4a;
+}
+
 /* ===== GM Tools（開發用，上線前移除） ===== */
 .gm-panel {
   display: none;
