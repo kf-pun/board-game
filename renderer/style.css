@@ -273,6 +273,7 @@ html, body {
 /* ===== 棋盤主畫面 ===== */
 #screen-board {
   background-color: #1a1a2e;
+  position: relative;
 }
 
 /* 頂部狀態列 */
@@ -941,4 +942,63 @@ html, body {
   font-size: 14px;
   line-height: 1.8;
   letter-spacing: 1px;
+}
+
+/* ===== GM Tools（開發用，上線前移除） ===== */
+.gm-panel {
+  display: none;
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  background-color: rgba(0, 0, 0, 0.88);
+  border: 1px solid #f0c040;
+  border-radius: 8px;
+  padding: 12px 16px;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 100;
+  min-width: 300px;
+}
+
+.gm-panel.visible {
+  display: flex;
+}
+
+.gm-title {
+  color: #f0c040;
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-align: center;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #3a3a6a;
+}
+
+.gm-section-label {
+  color: #8899aa;
+  font-size: 11px;
+  letter-spacing: 1px;
+  margin-top: 2px;
+}
+
+.gm-btn-row {
+  display: flex;
+  gap: 6px;
+}
+
+.gm-btn {
+  flex: 1;
+  height: 30px;
+  font-size: 12px;
+  font-family: inherit;
+  background-color: #2a2a4a;
+  color: #e2c97e;
+  border: 1px solid #3a3a6a;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.gm-btn:hover {
+  background-color: #3a3a6a;
 }

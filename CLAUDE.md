@@ -34,6 +34,20 @@ board-game/
   screen-battle、screen-upgrade、screen-event、
   screen-item、screen-shop、screen-result
 - 畫面初始化函式命名：initXxxScreen()
+### gameState 欄位
+- currentScreen：當前畫面 ID
+- selectedJobIndex / selectedJob：職業索引與物件
+- playerLevel / playerExp / playerSkills：等級、經驗、技能清單（最多3個）
+- playerCurrentHp：當前HP（選職業時初始化為 job.stats.hp）
+- gold：金幣（測試初始50，正式應為0）
+- currentTurn / playerPos / boardCells：回合、棋盤位置、格子陣列
+- inventory：道具欄3格（預設null）
+- battleRound / battlePhase / enemies / activeInfoTab：戰鬥狀態
+- pendingUpgradeOptions / selectedUpgradeCard：升級選擇暫存
+### 棋盤相關函式命名
+- rollDice()：擲骰子並移動角色
+- triggerCellEvent(type)：依格子類型觸發對應畫面或邏輯
+- afterCellEvent()：格子事件結束，currentTurn++、啟用骰子
 ### 戰鬥相關函式命名
 - playerAttack()：玩家攻擊邏輯
 - enemyTurn()：敵方行動邏輯
@@ -56,6 +70,7 @@ board-game/
 - html/body/.screen 高度一律使用 100vh
 - 測試用怪物攻擊力需高於玩家最高防禦力(15)
 - 戰鬥畫面分兩區：上方表演區(#1a1a2e)、下方操作區(#0d0d1a)
+- GM Tools：棋盤畫面按 G 鍵開關浮動測試面板，正式上線前需移除
 ## 開發進度
 - [x] Electron 基礎框架
 - [x] 開始畫面

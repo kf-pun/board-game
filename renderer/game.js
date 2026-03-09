@@ -782,6 +782,42 @@ function initBattleScreen() {
   document.getElementById('tab-enemy').addEventListener('click', () => renderInfoContent('enemy'))
 }
 
+// ===== GM Tools（開發用，上線前移除） =====
+function initGmTools() {
+  const panel = document.getElementById('gm-tools')
+  const hide = () => panel.classList.remove('visible')
+
+  // G 鍵開關（只在棋盤畫面有效）
+  document.addEventListener('keydown', e => {
+    if ((e.key === 'g' || e.key === 'G') && gameState.currentScreen === 'screen-board') {
+      panel.classList.toggle('visible')
+    }
+  })
+
+  // 觸發格子類型
+  document.getElementById('gm-battle').addEventListener('click', () => { hide(); startBattle() })
+  document.getElementById('gm-item').addEventListener('click', () => { hide(); alert('觸發：🎁 道具格'); afterCellEvent() })
+  document.getElementById('gm-event').addEventListener('click', () => { hide(); startEvent() })
+  document.getElementById('gm-shop').addEventListener('click', () => { hide(); alert('觸發：🏪 商店格'); afterCellEvent() })
+  document.getElementById('gm-trap').addEventListener('click', () => { hide(); alert('觸發：💀 陷阱格'); afterCellEvent() })
+  document.getElementById('gm-bless').addEventListener('click', () => { hide(); alert('觸發：✨ 祝福格'); afterCellEvent() })
+
+  // 快速調整
+  document.getElementById('gm-add-gold').addEventListener('click', () => {
+    gameState.gold += 100
+    updateBoardStatus()
+  })
+  document.getElementById('gm-lose-hp').addEventListener('click', () => {
+    if (!gameState.selectedJob) return
+    gameState.playerCurrentHp = Math.max(0, gameState.playerCurrentHp - 50)
+  })
+  document.getElementById('gm-upgrade').addEventListener('click', () => {
+    hide()
+    gameState.playerLevel++
+    initUpgradeScreen(getTestUpgradeOptions())
+  })
+}
+
 // ===== 遊戲進入點 =====
 function init() {
   showScreen('screen-start')
@@ -789,6 +825,7 @@ function init() {
   initJobSelectScreen()
   initBoardScreen()
   initBattleScreen()
+  initGmTools()
   document.getElementById('btn-event-continue').addEventListener('click', continueAfterEvent)
 }
 
