@@ -47,6 +47,8 @@ board-game/
 - pendingItemOptions / selectedItemCard / itemDiscardMode：道具選擇暫存與丟棄旗標
 - currentShopItems：商店當次商品陣列（含 price / purchased 欄位）
 - shopDiscardMode / pendingShopItem：商店丟棄模式旗標與待放入道具
+- sealFragments：已獲得的封印碎片陣列（['flame'/'shadow'/'astral']，隱藏狀態）
+- playerCrackArmor：裂甲剩餘回合數（星界Boss二階段施加，防禦降 35%）
 ### 棋盤相關函式命名
 - rollDice()：擲骰子並移動角色
 - triggerCellEvent(type)：依格子類型觸發對應畫面或邏輯
@@ -76,6 +78,16 @@ board-game/
 - initShopScreen()：初始化商店畫面（金幣、道具欄、商品列表）
 - buyItem(index)：二次確認後扣款，有空欄直接放入，滿欄進入丟棄模式
 - leaveShop()：丟棄模式防呆，返回棋盤並推進回合
+### Boss 相關函式命名
+- startBattle(enemies)：enemies 為 null 時使用測試哥布林；傳入 Boss 陣列時保留玩家 HP
+- triggerBossPhase2(enemy)：HP ≤ 50% 時觸發二階段演出（台詞＋Buff）
+- bossCastSpecial(enemy)：Boss 二階段隨機技能（35% 機率）
+- updateAilmentDisplay()：更新玩家狀態異常標籤（裂甲等）
+- getSkillDamageMultiplier()：回傳技能傷害倍率（持有星界碎片時 ×1.2）
+### 封印碎片被動效果
+- flame：普攻命中後附加 1 層燃燒（上限 5 層，DoT 在敵方 DoT 結算步驟觸發）
+- shadow：進入戰鬥時 30% 機率先制（自動觸發一次玩家普攻）
+- astral：技能傷害 ×1.2；商店售價 ×0.9（向下取整）
 ## 色彩規範
 - 主背景：#1a1a2e
 - 次背景：#16213e
@@ -100,7 +112,7 @@ board-game/
 - [x] 事件畫面
 - [x] 道具畫面
 - [x] 商店畫面
-- [ ] 中Boss演出
+- [x] 中Boss演出
 - [ ] 最終Boss演出
 - [ ] 結算畫面
 - [ ] 開始畫面（含存檔判斷）

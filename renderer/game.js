@@ -124,6 +124,10 @@ const gameState = {
   currentShopItems: [],
   shopDiscardMode: false,
   pendingShopItem: null,
+  // 封印碎片（隱藏狀態，不顯示在任何 UI 上）
+  sealFragments: [],        // 已獲得的碎片 ['flame'/'shadow'/'astral']
+  // 玩家狀態異常
+  playerCrackArmor: 0,      // 裂甲剩餘回合數（防禦降低）
   // 戰鬥狀態
   playerCurrentHp: 0,
   battleRound: 1,
@@ -342,6 +346,18 @@ function triggerCellEvent(type) {
     startItem()
   } else if (type === 'shop') {
     startShop()
+  } else if (type === 'element') {
+    // 元素格：依位置觸發對應 Boss
+    const pos = gameState.playerPos
+    let bossId = null
+    if (pos === 10) bossId = 'boss_flame'
+    else if (pos === 20) bossId = 'boss_shadow'
+    else if (pos === 30) bossId = 'boss_astral'
+    if (bossId) {
+      startBattle([{ ...BOSSES[bossId] }])
+    } else {
+      afterCellEvent()
+    }
   } else {
     const cellType = CELL_TYPES[type]
     alert(`觸發：${cellType.icon} ${cellType.label}格`)
@@ -364,19 +380,30 @@ function initBoardScreen() {
 
 // ===== 戰鬥畫面 =====
 
-// 初始化並進入戰鬥
-function startBattle() {
+// 初始化並進入戰鬥（enemies 為 null 時使用測試哥布林）
+function startBattle(enemies = null) {
   const job = gameState.selectedJob
-  gameState.playerCurrentHp = job.stats.hp
+  if (!enemies) {
+    // 普通戰鬥（測試用）：重置 HP
+    gameState.playerCurrentHp = job.stats.hp
+    enemies = [{ name: '哥布林戰士', maxHp: 60, hp: 60, atk: 20, def: 5 }]
+  }
+  // Boss 戰保留玩家當前 HP（不重置）
   gameState.battleRound = 1
   gameState.battlePhase = 'player'
   gameState.activeInfoTab = 'player'
-  // 測試用敵人（暫時寫死）
-  gameState.enemies = [
-    { name: '哥布林戰士', maxHp: 60, hp: 60, atk: 20, def: 5 }
-  ]
+  gameState.enemies = enemies
+  gameState.playerCrackArmor = 0  // 重置裂甲狀態
   showScreen('screen-battle')
   renderBattleScreen()
+
+  // 暗影碎片：30% 機率奪得先機（自動觸發一次玩家攻擊）
+  if (gameState.sealFragments.includes('shadow') && Math.random() < 0.3) {
+    setActionLog('暗影之力讓你奪得先機！')
+    setTimeout(() => {
+      if (gameState.battlePhase === 'player') playerAttack()
+    }, 1200)
+  }
 }
 
 // 渲染戰鬥畫面
@@ -456,8 +483,9 @@ function renderInfoContent(tab) {
     : [
         ['攻擊', enemy.atk],
         ['防禦', enemy.def],
-        ['閃避率', '0%'],
-        ['爆擊率', '0%']
+        ['閃避率', (enemy.dodge ?? 0) + '%'],
+        ['爆擊率', '0%'],
+        ...(enemy.isBoss ? [['階段', `Phase ${enemy.phase}`]] : [])
       ]
   document.getElementById('info-content').innerHTML =
     rows.map(([label, val]) =>
@@ -491,6 +519,20 @@ function playerAttack() {
   const job = gameState.selectedJob
   const enemy = gameState.enemies[0]
 
+  // Boss 免疫狀態（暗影使者二階段）
+  if ((enemy.immune || 0) > 0) {
+    const remaining = enemy.immune - 1
+    enemy.immune--
+    setActionLog(
+      `${enemy.name} 的免疫護盾化解了攻擊！` +
+      (remaining > 0 ? `（剩餘 ${remaining} 回合）` : `（護盾消散！）`)
+    )
+    gameState.battlePhase = 'enemy'
+    updateBattleStatus()
+    setTimeout(enemyTurn, 900)
+    return
+  }
+
   // 閃避判斷（敵方閃避率）
   const enemyDodge = enemy.dodge ?? 0
   if (Math.random() * 100 < enemyDodge) {
@@ -510,7 +552,13 @@ function playerAttack() {
   }
   enemy.hp = Math.max(0, enemy.hp - dmg)
 
-  // 更新敵人UI
+  // 烈焰碎片：命中後附加 1 層燃燒（上限 5 層）
+  if (dmg > 0 && gameState.sealFragments.includes('flame')) {
+    enemy.burning = Math.min(5, (enemy.burning || 0) + 1)
+    logText += `，附加燃燒（${enemy.burning} 層）`
+  }
+
+  // 更新敵人 UI
   updateHpBar('enemy-hp-bar-0', enemy.hp, enemy.maxHp)
   document.getElementById('enemy-hp-text-0').textContent = `${enemy.hp} / ${enemy.maxHp}`
   const enemySprite = document.getElementById('enemy-sprite-0')
@@ -523,6 +571,12 @@ function playerAttack() {
     return
   }
 
+  // Boss 二階段切換（HP 降至 50% 且仍在第一階段）
+  if (enemy.isBoss && enemy.hp <= enemy.maxHp * 0.5 && enemy.phase === 1) {
+    triggerBossPhase2(enemy)
+    return  // triggerBossPhase2 內部接管後續流程
+  }
+
   // 切換敵方回合
   gameState.battlePhase = 'enemy'
   updateBattleStatus()
@@ -533,6 +587,26 @@ function playerAttack() {
 function enemyTurn() {
   const job = gameState.selectedJob
   const enemy = gameState.enemies[0]
+
+  // ④ 敵方 DoT 結算（燃燒）
+  if ((enemy.burning || 0) > 0) {
+    const burnDmg = Math.floor((4 + job.stats.atk * 0.12) * enemy.burning)
+    enemy.hp = Math.max(0, enemy.hp - burnDmg)
+    updateHpBar('enemy-hp-bar-0', enemy.hp, enemy.maxHp)
+    document.getElementById('enemy-hp-text-0').textContent = `${enemy.hp} / ${enemy.maxHp}`
+    setActionLog(`🔥 燃燒：${enemy.name} 受到 ${burnDmg} 點持續傷害（${enemy.burning} 層）`)
+    if (enemy.hp <= 0) {
+      setTimeout(() => endBattle('win'), 600)
+      return
+    }
+  }
+
+  // ⑤ Boss 二階段專屬技能（35% 機率）
+  if (enemy.isBoss && enemy.phase === 2 && Math.random() < 0.35) {
+    bossCastSpecial(enemy)
+    return
+  }
+
   // 閃避判斷（玩家閃避率）
   if (Math.random() * 100 < job.stats.dodge) {
     setActionLog(`你閃避了 ${enemy.name} 的攻擊！`)
@@ -543,7 +617,17 @@ function enemyTurn() {
     return
   }
 
-  const dmg = Math.max(0, enemy.atk - job.stats.def)
+  // 裂甲：玩家防禦降低 35%（星界裁決者二階段施加）
+  let playerDef = job.stats.def
+  let crackActive = false
+  if (gameState.playerCrackArmor > 0) {
+    playerDef = Math.floor(playerDef * 0.65)
+    gameState.playerCrackArmor--
+    crackActive = true
+    updateAilmentDisplay()
+  }
+
+  const dmg = Math.max(0, enemy.atk - playerDef)
   gameState.playerCurrentHp = Math.max(0, gameState.playerCurrentHp - dmg)
 
   // 更新玩家 HP UI
@@ -552,7 +636,7 @@ function enemyTurn() {
     `${gameState.playerCurrentHp} / ${job.stats.hp}`
   const playerSprite = document.getElementById('player-sprite')
   if (playerSprite) showDamagePopup(playerSprite, dmg)
-  setActionLog(`${enemy.name} 對你造成 ${dmg} 點傷害`)
+  setActionLog(`${enemy.name} 對你造成 ${dmg} 點傷害${crackActive ? '（裂甲）' : ''}`)
 
   // 檢查玩家死亡
   if (gameState.playerCurrentHp <= 0) {
@@ -566,6 +650,78 @@ function enemyTurn() {
   updateBattleStatus()
   document.getElementById('btn-attack').disabled = false
   setActionLog('你的回合')
+}
+
+// ===== Boss 特殊系統 =====
+
+// 更新玩家狀態異常顯示
+function updateAilmentDisplay() {
+  const ailments = []
+  if (gameState.playerCrackArmor > 0) {
+    ailments.push(`🪓裂甲（${gameState.playerCrackArmor}回合）`)
+  }
+  document.getElementById('ailment-list').textContent =
+    ailments.length > 0 ? ailments.join('、') : '無'
+}
+
+// Boss 二階段切換
+function triggerBossPhase2(enemy) {
+  enemy.phase = 2
+  let buffDesc = ''
+  if (enemy.seal === 'flame') {
+    enemy.atk = Math.floor(enemy.atk * 1.2)
+    buffDesc = `攻擊力狂化至 ${enemy.atk}！`
+  } else if (enemy.seal === 'shadow') {
+    enemy.immune = 2  // 免疫護盾 2 回合
+    buffDesc = '獲得免疫護盾 2 回合！'
+  } else if (enemy.seal === 'astral') {
+    enemy.atk = Math.floor(enemy.atk * 1.15)
+    enemy.def = Math.floor(enemy.def * 1.15)
+    gameState.playerCrackArmor = 3  // 玩家裂甲 3 回合
+    buffDesc = `攻防強化（攻${enemy.atk}／防${enemy.def}）！對你施加裂甲 3 回合！`
+  }
+  setActionLog(`⚡ ${enemy.name}：${enemy.phaseQuote}　${buffDesc}`)
+  updateAilmentDisplay()
+  // 重新渲染敵人面板（數值已變）
+  if (gameState.activeInfoTab === 'enemy') renderInfoContent('enemy')
+  // 切換敵方回合（留時間讓玩家讀台詞）
+  gameState.battlePhase = 'enemy'
+  updateBattleStatus()
+  setTimeout(enemyTurn, 1600)
+}
+
+// Boss 二階段專屬技能
+function bossCastSpecial(enemy) {
+  const job = gameState.selectedJob
+  let skillName = ''
+  let dmg = 0
+  if (enemy.seal === 'flame') {
+    skillName = '烈焰爆發'
+    dmg = 200  // 固定傷害，無視防禦
+    gameState.playerCurrentHp = Math.max(0, gameState.playerCurrentHp - dmg)
+  } else if (enemy.seal === 'shadow') {
+    skillName = '黑暗侵蝕'
+    dmg = Math.max(0, Math.floor(enemy.atk * 1.5) - job.stats.def)
+    gameState.playerCurrentHp = Math.max(0, gameState.playerCurrentHp - dmg)
+  } else if (enemy.seal === 'astral') {
+    skillName = '星界審判'
+    dmg = Math.max(0, Math.floor(enemy.atk * 2) - job.stats.def)
+    gameState.playerCurrentHp = Math.max(0, gameState.playerCurrentHp - dmg)
+  }
+  updateHpBar('player-hp-bar', gameState.playerCurrentHp, job.stats.hp)
+  document.getElementById('player-hp-text').textContent =
+    `${gameState.playerCurrentHp} / ${job.stats.hp}`
+  const playerSprite = document.getElementById('player-sprite')
+  if (playerSprite) showDamagePopup(playerSprite, dmg)
+  setActionLog(`💥 ${enemy.name} 發動「${skillName}」！造成 ${dmg} 點傷害！`)
+  if (gameState.playerCurrentHp <= 0) {
+    setTimeout(() => endBattle('lose'), 600)
+    return
+  }
+  gameState.battleRound++
+  gameState.battlePhase = 'player'
+  updateBattleStatus()
+  document.getElementById('btn-attack').disabled = false
 }
 
 // 下一級所需經驗（Lv1→2：100，每級+40）
@@ -603,7 +759,23 @@ function getTestUpgradeOptions() {
 // 戰鬥結束
 function endBattle(result) {
   if (result === 'win') {
-    // 暫時寫死經驗值，後續由怪物資料決定
+    const defeated = gameState.enemies[0]
+
+    // Boss 勝利：發放封印碎片（靜默提示）
+    if (defeated && defeated.isBoss && defeated.seal) {
+      if (!gameState.sealFragments.includes(defeated.seal)) {
+        gameState.sealFragments.push(defeated.seal)
+      }
+      setActionLog('你感受到一股神秘的力量融入體內...')
+      setTimeout(() => {
+        showScreen('screen-board')
+        updateBoardStatus()
+        afterCellEvent()
+      }, 1800)
+      return
+    }
+
+    // 普通戰鬥勝利：累積經驗
     gameState.playerExp += 100
     const needed = getNextLevelExp(gameState.playerLevel)
     if (gameState.playerExp >= needed) {
@@ -907,15 +1079,23 @@ function afterItemScreen() {
 // ===== 商店畫面 =====
 
 // 隨機抽取 4 個道具（允許重複），各自隨機定價 20~50 金幣
+// 星界碎片：所有售價打 9 折
 function startShop() {
+  const hasAstral = gameState.sealFragments.includes('astral')
   gameState.currentShopItems = Array.from({ length: 4 }, () => {
     const item = TEST_ITEMS[Math.floor(Math.random() * TEST_ITEMS.length)]
-    const price = 20 + Math.floor(Math.random() * 31)  // 20~50
+    let price = 20 + Math.floor(Math.random() * 31)  // 20~50
+    if (hasAstral) price = Math.floor(price * 0.9)   // 星界碎片：9折
     return { ...item, price, purchased: false }
   })
   gameState.shopDiscardMode = false
   gameState.pendingShopItem = null
   initShopScreen()
+}
+
+// 星界碎片：技能傷害倍率（+20%）
+function getSkillDamageMultiplier() {
+  return gameState.sealFragments.includes('astral') ? 1.2 : 1.0
 }
 
 // 渲染商店頂部道具欄（discardMode=true 時格子可點擊替換）
@@ -1063,6 +1243,10 @@ function initGmTools() {
   document.getElementById('gm-shop').addEventListener('click', () => { hide(); startShop() })
   document.getElementById('gm-trap').addEventListener('click', () => { hide(); alert('觸發：💀 陷阱格'); afterCellEvent() })
   document.getElementById('gm-bless').addEventListener('click', () => { hide(); alert('觸發：✨ 祝福格'); afterCellEvent() })
+  // Boss 戰鬥（直接觸發）
+  document.getElementById('gm-boss-flame').addEventListener('click', () => { hide(); startBattle([{ ...BOSSES.boss_flame }]) })
+  document.getElementById('gm-boss-shadow').addEventListener('click', () => { hide(); startBattle([{ ...BOSSES.boss_shadow }]) })
+  document.getElementById('gm-boss-astral').addEventListener('click', () => { hide(); startBattle([{ ...BOSSES.boss_astral }]) })
 
   // 快速調整
   document.getElementById('gm-add-gold').addEventListener('click', () => {
