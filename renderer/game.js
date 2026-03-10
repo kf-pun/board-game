@@ -16,12 +16,14 @@ const ICONS = {
   level:       '<i class="ra ra-trophy"></i>',            // ⭐ 等級／升級
 
   // --- 棋盤格子 ---
+  cellStart:   '<i class="ra ra-wooden-sign"></i>',       // 🏁 起點格
   cellBattle:  '<i class="ra ra-crossed-swords"></i>',   // ⚔️ 戰鬥格
   cellItem:    '<i class="ra ra-ammo-bag"></i>',          // 🎁 道具格
   cellShop:    '<i class="ra ra-gold-bar"></i>',          // 🏪 商店格
   cellTrap:    '<i class="ra ra-skull"></i>',             // 💀 陷阱格
   cellBless:   '<i class="ra ra-aura"></i>',              // ✨ 祝福格
   cellBoss:    '<i class="ra ra-dragon"></i>',            // 🐉 Boss 格
+  cellElement: '<i class="ra ra-frost-emblem"></i>',      // 🔴 元素格
 
   // --- Boss / 敵人 ---
   bossFlame:   '<i class="ra ra-fire"></i>',              // 🔥 火焰守護者
@@ -83,7 +85,7 @@ const TEST_EVENTS = [
     id: 'merchant',
     type: '商人',
     color: '#8e44ad',
-    emoji: '🧳',
+    icon: ICONS.merchant,
     title: '旅行商人',
     desc: '一名旅行商人笑著攔住你：「客官！要看看我的珍貴寶物嗎？」',
     options: [
@@ -105,7 +107,7 @@ const TEST_EVENTS = [
     id: 'bandit',
     type: '危險',
     color: '#c0392b',
-    emoji: '⚠️',
+    icon: ICONS.warning,
     title: '山賊攔路',
     desc: '一群山賊突然從樹叢中跳出將你包圍！「把錢交出來，或者嚐嚐我們的厲害！」',
     options: [
@@ -128,7 +130,7 @@ const TEST_EVENTS = [
     type: '神秘',
     color: '#16213e',
     borderColor: '#4a4a8a',
-    emoji: '🗿',
+    icon: ICONS.ancient,
     title: '古老石碑',
     desc: '路旁矗立著一塊散發幽光的古老石碑，上面刻著難以辨識的遠古文字。',
     options: [
@@ -150,14 +152,14 @@ const TEST_EVENTS = [
 
 // ===== 格子類型定義 =====
 const CELL_TYPES = {
-  start:   { label: '起點', icon: '🏁', color: '#f0c040' },
-  battle:  { label: '戰鬥', icon: '⚔️', color: '#c0392b' },
-  item:    { label: '道具', icon: '🎁', color: '#27ae60' },
-  event:   { label: '事件', icon: '📖', color: '#2980b9' },
-  shop:    { label: '商店', icon: '🏪', color: '#8e44ad' },
-  trap:    { label: '陷阱', icon: '💀', color: '#7f8c8d' },
-  bless:   { label: '祝福', icon: '✨', color: '#f39c12' },
-  element: { label: '元素', icon: '🔴', color: '#e74c3c' }
+  start:   { label: '起點', icon: ICONS.cellStart,   color: '#f0c040' },
+  battle:  { label: '戰鬥', icon: ICONS.cellBattle,  color: '#c0392b' },
+  item:    { label: '道具', icon: ICONS.cellItem,    color: '#27ae60' },
+  event:   { label: '事件', icon: ICONS.event,       color: '#2980b9' },
+  shop:    { label: '商店', icon: ICONS.cellShop,    color: '#8e44ad' },
+  trap:    { label: '陷阱', icon: ICONS.cellTrap,    color: '#7f8c8d' },
+  bless:   { label: '祝福', icon: ICONS.cellBless,   color: '#f39c12' },
+  element: { label: '元素', icon: ICONS.cellElement, color: '#e74c3c' }
 }
 
 // ===== 遊戲狀態 =====
@@ -397,14 +399,14 @@ function updatePlayerMarker() {
 function updateBoardStatus() {
   document.getElementById('board-job-info').textContent = `${gameState.selectedJob.name} Lv.1`
   document.getElementById('board-turn').textContent = `回合 ${gameState.currentTurn} / 20`
-  document.getElementById('board-gold').textContent = `💰 ${gameState.gold}`
+  document.getElementById('board-gold').innerHTML = `${ICONS.gold} ${gameState.gold}`
 }
 
 // 更新底部格子說明
 function updateCellDesc() {
   const type = gameState.boardCells[gameState.playerPos]
   const cellType = CELL_TYPES[type]
-  document.getElementById('board-cell-desc').textContent =
+  document.getElementById('board-cell-desc').innerHTML =
     `當前格子：${cellType.icon} ${cellType.label}格（第 ${gameState.playerPos} 格）`
 }
 
@@ -503,7 +505,7 @@ function startBattle(enemies = null) {
     const hasAllFragments = gameState.sealFragments.length === 3
     const quote = hasAllFragments ? firstEnemy.allFragmentsQuote : firstEnemy.phaseQuotes[1]
     const extra = hasAllFragments ? '　封印之力令黑暗之主受到削傷！' : ''
-    setTimeout(() => setActionLog(`👁️ ${quote}${extra}`), 400)
+    setTimeout(() => setActionLog(`${ICONS.skillEye} ${quote}${extra}`), 400)
     return
   }
 
@@ -616,9 +618,9 @@ function showDamagePopup(targetEl, amount) {
   setTimeout(() => pop.remove(), 900)
 }
 
-// 設定行動 log 文字
+// 設定行動 log 文字（支援 ICONS HTML，故使用 innerHTML）
 function setActionLog(text) {
-  document.getElementById('action-log').textContent = text
+  document.getElementById('action-log').innerHTML = text
 }
 
 // 玩家普攻
@@ -715,7 +717,7 @@ function enemyTurn() {
     enemy.hp = Math.max(0, enemy.hp - burnDmg)
     updateHpBar('enemy-hp-bar-0', enemy.hp, enemy.maxHp)
     document.getElementById('enemy-hp-text-0').textContent = `${enemy.hp} / ${enemy.maxHp}`
-    setActionLog(`🔥 燃燒：${enemy.name} 受到 ${burnDmg} 點持續傷害（${enemy.burning} 層）`)
+    setActionLog(`${ICONS.burning} 燃燒：${enemy.name} 受到 ${burnDmg} 點持續傷害（${enemy.burning} 層）`)
     if (enemy.hp <= 0) {
       setTimeout(() => endBattle('win'), 600)
       return
@@ -804,7 +806,7 @@ function triggerBossPhase2(enemy) {
     gameState.playerCrackArmor = 3  // 玩家裂甲 3 回合
     buffDesc = `攻防強化（攻${enemy.atk}／防${enemy.def}）！對你施加裂甲 3 回合！`
   }
-  setActionLog(`⚡ ${enemy.name}：${enemy.phaseQuote}　${buffDesc}`)
+  setActionLog(`${ICONS.crit} ${enemy.name}：${enemy.phaseQuote}　${buffDesc}`)
   updateAilmentDisplay()
   // 重新渲染敵人面板（數值已變）
   if (gameState.activeInfoTab === 'enemy') renderInfoContent('enemy')
@@ -818,7 +820,7 @@ function triggerBossPhase2(enemy) {
 function triggerFinalBossPhase2(enemy) {
   enemy.phase = 2
   enemy.atk = Math.floor(enemy.atk * 1.2)
-  setActionLog(`⚡ ${enemy.name}：${enemy.phaseQuotes[2]}　攻擊力強化至 ${enemy.atk}！`)
+  setActionLog(`${ICONS.crit} ${enemy.name}：${enemy.phaseQuotes[2]}　攻擊力強化至 ${enemy.atk}！`)
   if (gameState.activeInfoTab === 'enemy') renderInfoContent('enemy')
   gameState.battlePhase = 'enemy'
   updateBattleStatus()
@@ -830,7 +832,7 @@ function triggerFinalBossPhase3(enemy) {
   enemy.phase = 3
   enemy.atk = Math.floor(enemy.atk * 1.3)
   enemy.def = Math.floor(enemy.def * 0.5)
-  setActionLog(`💀 ${enemy.name}：${enemy.phaseQuotes[3]}　進入狂暴！攻擊暴增，防禦崩潰！`)
+  setActionLog(`${ICONS.berserk} ${enemy.name}：${enemy.phaseQuotes[3]}　進入狂暴！攻擊暴增，防禦崩潰！`)
   if (gameState.activeInfoTab === 'enemy') renderInfoContent('enemy')
   gameState.battlePhase = 'enemy'
   updateBattleStatus()
@@ -893,7 +895,7 @@ function generateFinalBoss() {
   return {
     id: 'boss_final',
     name: '黑暗之主',
-    emoji: '👁️',
+    icon: ICONS.skillEye,
     maxHp: hp, hp,
     atk, def,
     dodge: 10,
@@ -929,21 +931,21 @@ function getTestUpgradeOptions() {
   return [
     {
       id: 'crack_strike',
-      emoji: '⚔️', name: '裂甲重擊',
+      emoji: ICONS.skillCrack, name: '裂甲重擊',
       type: '主動', tag: 'new',
       desc: '造成攻擊力×180%傷害，附加裂甲2回合',
       cd: 3
     },
     {
       id: 'blood_rage',
-      emoji: '💢', name: '血怒',
+      emoji: ICONS.skillRage, name: '血怒',
       type: '主動', tag: 'new',
       desc: '獲得強化3層（2回合）',
       cd: 4
     },
     {
       id: 'fighting_spirit',
-      emoji: '💪', name: '鬥魂',
+      emoji: ICONS.skillWill, name: '鬥魂',
       type: '被動', tag: 'new',
       desc: 'HP低於30%時每回合自動獲得恢復1層',
       cd: null
@@ -960,9 +962,9 @@ function endBattle(result) {
     if (defeated && defeated.isFinalBoss) {
       const hasAllFragments = gameState.sealFragments.length === 3
       if (hasAllFragments) {
-        setActionLog('✨ 你以封印之力擊敗了黑暗之主！世界恢復了平靜...')
+        setActionLog(`${ICONS.cellBless} 你以封印之力擊敗了黑暗之主！世界恢復了平靜...`)
       } else {
-        setActionLog('⚔️ 你憑藉意志力擊敗了黑暗之主！')
+        setActionLog(`${ICONS.attack} 你憑藉意志力擊敗了黑暗之主！`)
       }
       setTimeout(() => showResultScreen(), 1500)
       return
@@ -1244,8 +1246,8 @@ function initUpgradeScreen(options) {
   gameState.selectedUpgradeCard = null
 
   // 更新等級文字
-  document.getElementById('upgrade-level-text').textContent =
-    `⭐ 升級！Lv.${gameState.playerLevel - 1} → Lv.${gameState.playerLevel}`
+  document.getElementById('upgrade-level-text').innerHTML =
+    `${ICONS.upgrade} 升級！Lv.${gameState.playerLevel - 1} → Lv.${gameState.playerLevel}`
 
   // 渲染技能持有欄（最多3格）
   const skillsBar = document.getElementById('upgrade-skills-bar')
@@ -1254,7 +1256,7 @@ function initUpgradeScreen(options) {
     const skill = gameState.playerSkills[i]
     const slot = document.createElement('div')
     slot.className = 'upgrade-skill-slot ' + (skill ? 'has-skill' : 'empty-slot')
-    slot.textContent = skill ? `${skill.emoji} ${skill.name}` : '空'
+    slot.innerHTML = skill ? `${skill.emoji} ${skill.name}` : '空'
     skillsBar.appendChild(slot)
   }
 
@@ -1339,7 +1341,7 @@ function initEventScreen(event) {
   const sceneEl = document.getElementById('event-scene')
   sceneEl.style.backgroundColor = event.color
   sceneEl.style.border = event.borderColor ? `2px solid ${event.borderColor}` : 'none'
-  document.getElementById('event-scene-emoji').textContent = event.emoji
+  document.getElementById('event-scene-emoji').innerHTML = event.icon
   document.getElementById('event-type-label').textContent = event.type
 
   // 右側文字
@@ -1432,14 +1434,14 @@ function renderItemSlots(discardMode) {
     slot.className = 'item-slot ' + (item ? 'has-item' : 'empty-slot')
     if (discardMode && item) {
       slot.classList.add('discard-mode')
-      slot.textContent = `${item.emoji} ${item.name}`
+      slot.innerHTML = `${ICONS[item.icon]} ${item.name}`
       slot.addEventListener('click', () => {
         const selected = gameState.pendingItemOptions[gameState.selectedItemCard]
         gameState.inventory[i] = selected
         afterItemScreen()
       })
     } else {
-      slot.textContent = item ? `${item.emoji} ${item.name}` : '空'
+      slot.innerHTML = item ? `${ICONS[item.icon]} ${item.name}` : '空'
     }
     slotsEl.appendChild(slot)
   })
@@ -1461,7 +1463,7 @@ function initItemScreen(items) {
     card.className = 'item-card'
     const tagColor = ITEM_TIMING_COLOR[item.timing] || '#aabbcc'
     card.innerHTML = `
-      <div class="item-card-emoji">${item.emoji}</div>
+      <div class="item-card-emoji">${ICONS[item.icon]}</div>
       <div class="item-card-name">${item.name}</div>
       <div class="item-card-tag" style="background-color:${tagColor}20;color:${tagColor};border-color:${tagColor}60">${item.timingLabel}</div>
       <div class="item-card-desc">${item.desc}</div>
@@ -1556,7 +1558,7 @@ function renderShopInventory(discardMode) {
     slot.className = 'item-slot ' + (item ? 'has-item' : 'empty-slot')
     if (discardMode && item) {
       slot.classList.add('discard-mode')
-      slot.textContent = `${item.emoji} ${item.name}`
+      slot.innerHTML = `${ICONS[item.icon]} ${item.name}`
       slot.addEventListener('click', () => {
         // 替換此格，結束丟棄模式
         gameState.inventory[i] = gameState.pendingShopItem
@@ -1567,7 +1569,7 @@ function renderShopInventory(discardMode) {
         document.getElementById('btn-leave-shop').disabled = false
       })
     } else {
-      slot.textContent = item ? `${item.emoji} ${item.name}` : '空'
+      slot.innerHTML = item ? `${ICONS[item.icon]} ${item.name}` : '空'
     }
     slotsEl.appendChild(slot)
   })
@@ -1610,7 +1612,7 @@ function initShopScreen() {
     row.className = 'shop-row'
     const tagColor = ITEM_TIMING_COLOR[shopItem.timing] || '#aabbcc'
     row.innerHTML = `
-      <div class="shop-row-emoji">${shopItem.emoji}</div>
+      <div class="shop-row-emoji">${ICONS[shopItem.icon]}</div>
       <div class="shop-row-info">
         <div class="shop-row-name">${shopItem.name}</div>
         <div class="shop-row-desc">${shopItem.desc}</div>

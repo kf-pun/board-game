@@ -26,7 +26,7 @@
       <div class="btn-group">
         <button class="btn btn-gold" id="btn-new-game">▶ 開始新遊戲</button>
         <button class="btn btn-gray" disabled>↩ 繼續遊戲</button>
-        <button class="btn btn-gray" id="btn-meta-shop">🏪 周目解鎖</button>
+        <button class="btn btn-gray" id="btn-meta-shop"><i class="ra ra-castle-flag"></i> 周目解鎖</button>
       </div>
       <p class="start-score" id="start-score-display">累積分數：0 分</p>
     </div>
@@ -92,7 +92,7 @@
         <!-- 骰子控制區（棋盤中央） -->
         <div class="dice-center" id="dice-center">
           <div class="dice-face" id="dice-face">?</div>
-          <button class="btn btn-gold dice-btn" id="btn-roll">🎲 擲骰子</button>
+          <button class="btn btn-gold dice-btn" id="btn-roll"><i class="ra ra-perspective-dice-random"></i> 擲骰子</button>
           <div class="dice-msg" id="dice-msg"></div>
         </div>
       </div>
@@ -213,7 +213,7 @@
 
     <!-- 頂部狀態列（高度 80px） -->
     <div class="upgrade-header">
-      <div class="upgrade-level-text" id="upgrade-level-text">⭐ 升級！</div>
+      <div class="upgrade-level-text" id="upgrade-level-text"><i class="ra ra-trophy"></i> 升級！</div>
       <div class="upgrade-skills-bar" id="upgrade-skills-bar">
         <!-- 技能欄由 JS 動態生成 -->
       </div>
@@ -284,7 +284,7 @@
 
     <!-- 頂部：金幣 + 道具欄 -->
     <div class="shop-header">
-      <div class="shop-gold">💰 金幣：<span id="shop-gold-amount">0</span></div>
+      <div class="shop-gold"><i class="ra ra-gold-bar"></i> 金幣：<span id="shop-gold-amount">0</span></div>
       <div class="shop-inventory-label">道具欄</div>
       <div class="item-slots" id="shop-item-slots">
         <!-- 由 JS 動態生成 -->
@@ -325,7 +325,7 @@
       <h2 class="result-subtitle">冒險完成！黑暗已被驅散</h2>
 
       <div id="result-seal-badge" class="hidden">
-        ✨ 完美通關：三大封印完全解除 ✨
+        <i class="ra ra-aura"></i> 完美通關：三大封印完全解除 <i class="ra ra-aura"></i>
       </div>
 
       <div class="result-stats">

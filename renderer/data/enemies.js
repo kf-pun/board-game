@@ -1,9 +1,10 @@
 // ===== 中 Boss 資料（依 SPEC.md Boss設計章節）=====
+// icon 欄位為 ICONS 字典的 key 字串，渲染時使用 ICONS[boss.icon]
 const BOSSES = {
   boss_flame: {
     id:         'boss_flame',
     name:       '火焰守護者',
-    emoji:      '🔥',
+    icon:       'bossFlame',
     maxHp:      550,
     hp:         550,
     atk:        176,
@@ -17,7 +18,7 @@ const BOSSES = {
   boss_shadow: {
     id:         'boss_shadow',
     name:       '暗影使者',
-    emoji:      '🌑',
+    icon:       'bossShadow',
     maxHp:      900,
     hp:         900,
     atk:        95,
@@ -31,7 +32,7 @@ const BOSSES = {
   boss_astral: {
     id:         'boss_astral',
     name:       '星界裁決者',
-    emoji:      '⭐',
+    icon:       'bossAstral',
     maxHp:      1600,
     hp:         1600,
     atk:        135,
