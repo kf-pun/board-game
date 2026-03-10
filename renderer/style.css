@@ -13,6 +13,12 @@ html, body {
   user-select: none;
 }
 
+/* ===== 畫面切換動畫 ===== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 /* ===== 畫面容器 ===== */
 .screen {
   width: 1280px;
@@ -23,6 +29,7 @@ html, body {
 
 .screen.active {
   display: flex;
+  animation: fadeIn 0.3s ease-in-out;
 }
 
 /* ===== 開始畫面 ===== */
@@ -76,12 +83,23 @@ html, body {
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  transition: opacity 0.15s, transform 0.1s;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: none !important;
 }
 
 .btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .btn-gold {
@@ -90,14 +108,22 @@ html, body {
   font-weight: bold;
 }
 
-.btn-gold:hover {
-  opacity: 0.85;
+.btn-gold:hover:not(:disabled) {
+  opacity: 0.9;
   transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(201, 162, 39, 0.55);
 }
 
 .btn-gray {
   background-color: #3a3a5c;
   color: #8899aa;
+}
+
+.btn-gray:hover:not(:disabled) {
+  background-color: #4a4a72;
+  color: #ccddef;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(58, 58, 92, 0.7);
 }
 
 /* ===== 按鈕寬版 ===== */
@@ -151,12 +177,19 @@ html, body {
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.15s;
+  transition: all 0.2s ease-in-out;
   flex-shrink: 0;
 }
 
 .job-nav-btn:hover {
   background-color: #3a3a6a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(58, 58, 106, 0.7);
+}
+
+.job-nav-btn:active {
+  transform: translateY(1px);
+  box-shadow: none;
 }
 
 /* 職業卡片 */
@@ -753,17 +786,19 @@ html, body {
   flex-direction: column;
   gap: 12px;
   cursor: pointer;
-  transition: border-color 0.15s, transform 0.15s;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.2s;
 }
 
 .upgrade-card:hover {
   border-color: #f0c040;
-  transform: translateY(-4px);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 0 16px rgba(201, 162, 39, 0.2);
 }
 
 .upgrade-card.selected {
   border-color: #ffffff;
   border-width: 2px;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15), 0 0 24px rgba(240, 192, 64, 0.35);
 }
 
 .upgrade-card-title {
@@ -910,12 +945,19 @@ html, body {
   cursor: pointer;
   text-align: left;
   padding: 0 20px;
-  transition: background-color 0.15s, border-color 0.15s;
+  transition: all 0.2s ease-in-out;
 }
 
 .event-option-btn:hover:not(:disabled) {
   background-color: #3a3a6a;
   border-color: #c9a227;
+  transform: translateX(4px);
+  box-shadow: -3px 0 0 0 #c9a227;
+}
+
+.event-option-btn:active:not(:disabled) {
+  transform: translateX(1px);
+  box-shadow: none;
 }
 
 .event-option-btn:disabled {
@@ -1033,17 +1075,19 @@ html, body {
   gap: 12px;
   cursor: pointer;
   text-align: center;
-  transition: border-color 0.15s, transform 0.15s;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.2s;
 }
 
 .item-card:hover {
   border-color: #c9a227;
-  transform: translateY(-4px);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 0 16px rgba(201, 162, 39, 0.2);
 }
 
 .item-card.selected {
   border-color: #ffffff;
   border-width: 2px;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15), 0 0 24px rgba(240, 192, 64, 0.35);
 }
 
 .item-card-emoji {
@@ -1195,7 +1239,7 @@ html, body {
   letter-spacing: 1px;
   font-weight: bold;
   flex-shrink: 0;
-  transition: opacity 0.15s;
+  transition: all 0.2s ease-in-out;
 }
 
 .shop-buy-btn.can-buy {
@@ -1204,7 +1248,14 @@ html, body {
 }
 
 .shop-buy-btn.can-buy:hover {
-  opacity: 0.85;
+  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(201, 162, 39, 0.55);
+}
+
+.shop-buy-btn.can-buy:active {
+  transform: translateY(1px);
+  box-shadow: none;
 }
 
 .shop-buy-btn:disabled {
@@ -1430,8 +1481,10 @@ html, body {
   border: 1px solid #f0c040;
 }
 
-.btn-gold:hover {
+.btn-gold:hover:not(:disabled) {
   background-color: #a07800;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(240, 192, 64, 0.45);
 }
 
 .result-footer {
@@ -1523,7 +1576,7 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  transition: border-color 0.15s, background-color 0.15s;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.2s, background-color 0.2s;
 }
 
 .meta-card-name {
@@ -1571,6 +1624,8 @@ html, body {
 .meta-card.available:hover {
   background-color: #1e2042;
   border-color: #5a7acc;
+  transform: translateY(-5px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55), 0 0 12px rgba(90, 122, 204, 0.3);
 }
 
 .meta-card.available .meta-card-btn {
