@@ -21,9 +21,9 @@
       <div class="btn-group">
         <button class="btn btn-gold" id="btn-new-game">▶ 開始新遊戲</button>
         <button class="btn btn-gray" disabled>↩ 繼續遊戲</button>
-        <button class="btn btn-gray" disabled>🏪 解鎖商店</button>
+        <button class="btn btn-gray" id="btn-meta-shop">🏪 周目解鎖</button>
       </div>
-      <p class="start-score">累積分數：0 分</p>
+      <p class="start-score" id="start-score-display">累積分數：0 分</p>
     </div>
 
   </div>
@@ -337,9 +337,31 @@
     </div>
   </div>
 
+  <!-- 周目解鎖商店 -->
+  <div id="screen-meta-shop" class="screen">
+
+    <!-- 頂部：積分 + 返回 -->
+    <div class="meta-shop-header">
+      <div class="meta-score-label">全域總積分：<span id="meta-global-score">0</span> 分</div>
+      <button class="btn btn-gray" onclick="leaveMetaShop()">← 返回開始畫面</button>
+    </div>
+
+    <!-- 分頁列 -->
+    <div class="meta-tabs" id="meta-tabs">
+      <!-- 由 JS 動態渲染 -->
+    </div>
+
+    <!-- 卡片網格 -->
+    <div class="meta-cards-container" id="meta-cards-container">
+      <!-- 由 JS 動態渲染 -->
+    </div>
+
+  </div>
+
   <script src="data/jobs.js"></script>
   <script src="data/items.js"></script>
   <script src="data/enemies.js"></script>
+  <script src="data/meta.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

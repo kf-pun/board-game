@@ -143,12 +143,43 @@ function showScreen(screenId) {
   gameState.currentScreen = screenId
 }
 
+// ===== 本機存檔輔助函式 =====
+
+// 讀取已解鎖的 Meta 升級清單（localStorage）
+function getUnlockedMeta() {
+  try {
+    return JSON.parse(localStorage.getItem('unlockedMeta') || '[]')
+  } catch {
+    return []
+  }
+}
+
+// 將新解鎖的 id 存入 localStorage
+function saveUnlockedMeta(id) {
+  const unlocked = getUnlockedMeta()
+  if (!unlocked.includes(id)) {
+    unlocked.push(id)
+    localStorage.setItem('unlockedMeta', JSON.stringify(unlocked))
+  }
+}
+
+// 更新開始畫面的累積分數顯示
+function updateStartScore() {
+  const score = parseInt(localStorage.getItem('globalScore') || '0', 10)
+  const el = document.getElementById('start-score-display')
+  if (el) el.textContent = `累積分數：${score} 分`
+}
+
 // ===== 開始畫面初始化 =====
 function initStartScreen() {
   document.getElementById('btn-new-game').addEventListener('click', () => {
     showScreen('screen-job-select')
     renderJobCard()
   })
+  document.getElementById('btn-meta-shop').addEventListener('click', () => {
+    showMetaShop()
+  })
+  updateStartScore()
 }
 
 // ===== 職業選擇畫面 =====
@@ -206,12 +237,14 @@ function initJobSelectScreen() {
     const job = JOBS[gameState.selectedJobIndex]
     const confirmed = confirm(`確定選擇「${job.name}」作為你的職業嗎？`)
     if (confirmed) {
-      gameState.selectedJob = job
-      gameState.playerCurrentHp = job.stats.hp  // 初始化 HP
+      // 複製職業 stats，避免 Meta 加成污染原始資料
+      gameState.selectedJob = { ...job, stats: { ...job.stats } }
+      gameState.playerCurrentHp = job.stats.hp  // 先設基礎 HP
       gameState.boardCells = generateBoard()
       gameState.playerPos = 0
       gameState.currentTurn = 1
       gameState.gold = 50  // 測試用初始金幣
+      applyMetaUpgrades()  // 疊加已解鎖的周目加成
       showScreen('screen-board')
       renderBoard()
       updateBoardStatus()
@@ -905,6 +938,161 @@ function endBattle(result) {
   afterCellEvent()
 }
 
+// ===== 周目解鎖商店 =====
+
+const META_TAB_LABELS = {
+  common:   '共通',
+  warrior:  '戰士',
+  assassin: '刺客',
+  mage:     '法師',
+  warlock:  '術士'
+}
+
+// 進入周目解鎖商店
+function showMetaShop() {
+  const score = parseInt(localStorage.getItem('globalScore') || '0', 10)
+  document.getElementById('meta-global-score').textContent = score
+  renderMetaTabs('common')
+  showScreen('screen-meta-shop')
+}
+
+// 離開周目解鎖商店，返回開始畫面
+function leaveMetaShop() {
+  updateStartScore()
+  showScreen('screen-start')
+}
+
+// 渲染分頁列
+function renderMetaTabs(activeTab) {
+  const container = document.getElementById('meta-tabs')
+  container.innerHTML = ''
+  Object.keys(META_TAB_LABELS).forEach(tab => {
+    const btn = document.createElement('button')
+    btn.className = 'meta-tab-btn' + (tab === activeTab ? ' active' : '')
+    btn.textContent = META_TAB_LABELS[tab]
+    btn.addEventListener('click', () => {
+      renderMetaTabs(tab)
+      renderMetaCards(tab)
+    })
+    container.appendChild(btn)
+  })
+  renderMetaCards(activeTab)
+}
+
+// 渲染升級卡片
+function renderMetaCards(tab) {
+  const container = document.getElementById('meta-cards-container')
+  container.innerHTML = ''
+
+  const globalScore = parseInt(localStorage.getItem('globalScore') || '0', 10)
+  const unlocked = getUnlockedMeta()
+
+  const upgrades = META_UPGRADES.filter(u => u.tab === tab)
+
+  if (upgrades.length === 0) {
+    const empty = document.createElement('p')
+    empty.style.cssText = 'color:#556677;grid-column:1/-1;text-align:center;padding:40px;'
+    empty.textContent = '此分頁尚無可解鎖的升級'
+    container.appendChild(empty)
+    return
+  }
+
+  upgrades.forEach(upgrade => {
+    const isUnlocked = unlocked.includes(upgrade.id)
+    const reqMet = !upgrade.req || unlocked.includes(upgrade.req)
+    const canAfford = globalScore >= upgrade.cost
+
+    // 判斷狀態
+    let stateClass, btnText, btnDisabled
+    if (isUnlocked) {
+      stateClass = 'unlocked'
+      btnText = '✓ 已解鎖'
+      btnDisabled = true
+    } else if (!reqMet) {
+      stateClass = 'locked'
+      btnText = '🔒 需解鎖前置能力'
+      btnDisabled = true
+    } else if (!canAfford) {
+      stateClass = 'no-score'
+      btnText = '積分不足'
+      btnDisabled = true
+    } else {
+      stateClass = 'available'
+      btnText = '解鎖'
+      btnDisabled = false
+    }
+
+    const card = document.createElement('div')
+    card.className = `meta-card ${stateClass}`
+    card.innerHTML = `
+      <div class="meta-card-name">${upgrade.name}</div>
+      <div class="meta-card-desc">${upgrade.desc}</div>
+      <div class="meta-card-cost">花費：<span>${upgrade.cost}</span> 分</div>
+      <button class="meta-card-btn" ${btnDisabled ? 'disabled' : ''}>${btnText}</button>
+    `
+    if (!btnDisabled) {
+      card.querySelector('.meta-card-btn').addEventListener('click', () => {
+        buyMetaUpgrade(upgrade.id)
+      })
+    }
+    container.appendChild(card)
+  })
+}
+
+// 購買周目升級
+function buyMetaUpgrade(id) {
+  const upgrade = META_UPGRADES.find(u => u.id === id)
+  if (!upgrade) return
+
+  const globalScore = parseInt(localStorage.getItem('globalScore') || '0', 10)
+  if (globalScore < upgrade.cost) return
+
+  const confirmed = confirm(`花費 ${upgrade.cost} 分解鎖「${upgrade.name}」？\n剩餘積分：${globalScore - upgrade.cost}`)
+  if (!confirmed) return
+
+  // 扣分
+  const newScore = globalScore - upgrade.cost
+  localStorage.setItem('globalScore', String(newScore))
+
+  // 存入解鎖清單
+  saveUnlockedMeta(id)
+
+  // 更新頂部積分顯示並重繪卡片
+  document.getElementById('meta-global-score').textContent = newScore
+
+  // 找出當前 active tab 重新渲染
+  const activeTabBtn = document.querySelector('.meta-tab-btn.active')
+  const currentTab = activeTabBtn ? Object.keys(META_TAB_LABELS).find(
+    k => META_TAB_LABELS[k] === activeTabBtn.textContent
+  ) : 'common'
+  renderMetaCards(currentTab)
+}
+
+// 將已解鎖的周目加成疊加至本局 gameState（職業選定後呼叫）
+function applyMetaUpgrades() {
+  const unlocked = getUnlockedMeta()
+  const jobId = gameState.selectedJob ? gameState.selectedJob.id : null
+  const stats = gameState.selectedJob ? gameState.selectedJob.stats : null
+
+  unlocked.forEach(id => {
+    const upgrade = META_UPGRADES.find(u => u.id === id)
+    if (!upgrade) return
+    // 職業專屬升級：檢查 jobId
+    if (upgrade.jobId && upgrade.jobId !== jobId) return
+
+    const ef = upgrade.effect
+    if (ef.gold)  gameState.gold += ef.gold
+    if (ef.hp && stats) {
+      stats.hp += ef.hp
+      gameState.playerCurrentHp += ef.hp  // 同步提升當前 HP
+    }
+    if (ef.atk  && stats) stats.atk  += ef.atk
+    if (ef.def  && stats) stats.def  += ef.def
+    if (ef.dodge && stats) stats.dodge += ef.dodge
+    if (ef.crit  && stats) stats.crit  += ef.crit
+  })
+}
+
 // 顯示結算畫面（通關勝利）
 function showResultScreen() {
   const job = gameState.selectedJob
@@ -983,6 +1171,7 @@ function returnToTitle() {
   gameState.enemies = []
   gameState.activeInfoTab = 'player'
   showScreen('screen-start')
+  updateStartScore()
 }
 
 // ===== 升級選擇畫面 =====
