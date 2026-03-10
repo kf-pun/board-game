@@ -368,6 +368,11 @@ function triggerCellEvent(type) {
 // 格子事件結束後回到棋盤流程
 function afterCellEvent() {
   gameState.currentTurn++
+  // 第20回合結算後觸發最終Boss（不回棋盤）
+  if (gameState.currentTurn > 20) {
+    startFinalBossBattle()
+    return
+  }
   updateBoardStatus()
   document.getElementById('btn-roll').disabled = false
   document.getElementById('dice-msg').textContent = ''
@@ -396,6 +401,16 @@ function startBattle(enemies = null) {
   gameState.playerCrackArmor = 0  // 重置裂甲狀態
   showScreen('screen-battle')
   renderBattleScreen()
+
+  // 最終Boss開場台詞（不觸發暗影先制，演出期間讓玩家讀台詞）
+  const firstEnemy = enemies[0]
+  if (firstEnemy && firstEnemy.isFinalBoss) {
+    const hasAllFragments = gameState.sealFragments.length === 3
+    const quote = hasAllFragments ? firstEnemy.allFragmentsQuote : firstEnemy.phaseQuotes[1]
+    const extra = hasAllFragments ? '　封印之力令黑暗之主受到削傷！' : ''
+    setTimeout(() => setActionLog(`👁️ ${quote}${extra}`), 400)
+    return
+  }
 
   // 暗影碎片：30% 機率奪得先機（自動觸發一次玩家攻擊）
   if (gameState.sealFragments.includes('shadow') && Math.random() < 0.3) {
@@ -571,8 +586,19 @@ function playerAttack() {
     return
   }
 
-  // Boss 二階段切換（HP 降至 50% 且仍在第一階段）
-  if (enemy.isBoss && enemy.hp <= enemy.maxHp * 0.5 && enemy.phase === 1) {
+  // Boss 階段切換
+  if (enemy.isFinalBoss) {
+    // 最終Boss：60% → 第二階段，30% → 第三階段
+    if (enemy.hp <= enemy.maxHp * 0.3 && enemy.phase < 3) {
+      triggerFinalBossPhase3(enemy)
+      return
+    }
+    if (enemy.hp <= enemy.maxHp * 0.6 && enemy.phase === 1) {
+      triggerFinalBossPhase2(enemy)
+      return
+    }
+  } else if (enemy.isBoss && enemy.hp <= enemy.maxHp * 0.5 && enemy.phase === 1) {
+    // 中Boss二階段切換（HP 降至 50%）
     triggerBossPhase2(enemy)
     return  // triggerBossPhase2 內部接管後續流程
   }
@@ -601,10 +627,13 @@ function enemyTurn() {
     }
   }
 
-  // ⑤ Boss 二階段專屬技能（35% 機率）
-  if (enemy.isBoss && enemy.phase === 2 && Math.random() < 0.35) {
-    bossCastSpecial(enemy)
-    return
+  // ⑤ Boss 二/三階段專屬技能
+  if (enemy.isBoss && enemy.phase >= 2) {
+    const specialChance = (enemy.isFinalBoss && enemy.phase === 3) ? 0.5 : 0.35
+    if (Math.random() < specialChance) {
+      bossCastSpecial(enemy)
+      return
+    }
   }
 
   // 閃避判斷（玩家閃避率）
@@ -690,12 +719,48 @@ function triggerBossPhase2(enemy) {
   setTimeout(enemyTurn, 1600)
 }
 
+// 最終Boss第二階段切換（HP ≤ 60%）
+function triggerFinalBossPhase2(enemy) {
+  enemy.phase = 2
+  enemy.atk = Math.floor(enemy.atk * 1.2)
+  setActionLog(`⚡ ${enemy.name}：${enemy.phaseQuotes[2]}　攻擊力強化至 ${enemy.atk}！`)
+  if (gameState.activeInfoTab === 'enemy') renderInfoContent('enemy')
+  gameState.battlePhase = 'enemy'
+  updateBattleStatus()
+  setTimeout(enemyTurn, 1600)
+}
+
+// 最終Boss第三階段切換（HP ≤ 30%）狂暴：防禦削半、攻擊再提升
+function triggerFinalBossPhase3(enemy) {
+  enemy.phase = 3
+  enemy.atk = Math.floor(enemy.atk * 1.3)
+  enemy.def = Math.floor(enemy.def * 0.5)
+  setActionLog(`💀 ${enemy.name}：${enemy.phaseQuotes[3]}　進入狂暴！攻擊暴增，防禦崩潰！`)
+  if (gameState.activeInfoTab === 'enemy') renderInfoContent('enemy')
+  gameState.battlePhase = 'enemy'
+  updateBattleStatus()
+  setTimeout(enemyTurn, 1600)
+}
+
 // Boss 二階段專屬技能
 function bossCastSpecial(enemy) {
   const job = gameState.selectedJob
   let skillName = ''
   let dmg = 0
-  if (enemy.seal === 'flame') {
+  if (enemy.isFinalBoss) {
+    // 最終Boss技能池：Phase2三選一、Phase3選後兩種強技能
+    const finalSkills = [
+      { name: '暗黑衝擊', mult: 1.3, ignoresDef: false },
+      { name: '虛空斬擊', mult: 1.8, ignoresDef: false },
+      { name: '末日審判', mult: 2.5, ignoresDef: true }
+    ]
+    const pool = enemy.phase === 3 ? finalSkills.slice(1) : finalSkills
+    const skill = pool[Math.floor(Math.random() * pool.length)]
+    skillName = skill.name
+    const rawDmg = Math.floor(enemy.atk * skill.mult)
+    dmg = skill.ignoresDef ? rawDmg : Math.max(0, rawDmg - job.stats.def)
+    gameState.playerCurrentHp = Math.max(0, gameState.playerCurrentHp - dmg)
+  } else if (enemy.seal === 'flame') {
     skillName = '烈焰爆發'
     dmg = 200  // 固定傷害，無視防禦
     gameState.playerCurrentHp = Math.max(0, gameState.playerCurrentHp - dmg)
@@ -722,6 +787,41 @@ function bossCastSpecial(enemy) {
   gameState.battlePhase = 'player'
   updateBattleStatus()
   document.getElementById('btn-attack').disabled = false
+}
+
+// 最終Boss動態生成（依玩家等級計算數值）
+function generateFinalBoss() {
+  const lv = gameState.playerLevel
+  const hp  = 2500 + lv * 150
+  const atk = 80   + lv * 5
+  const def = 40   + lv * 2
+  return {
+    id: 'boss_final',
+    name: '黑暗之主',
+    emoji: '👁️',
+    maxHp: hp, hp,
+    atk, def,
+    dodge: 10,
+    isBoss: true,
+    isFinalBoss: true,
+    phase: 1,
+    seal: null,
+    phaseQuotes: {
+      1: '「愚蠢的凡人，你的旅程到此為止了⋯⋯」',
+      2: '「黑暗在湧動⋯⋯真正的恐懼現在才開始！」',
+      3: '「不⋯⋯這不可能！與我一同墮入深淵吧！」'
+    },
+    allFragmentsQuote: '「這股力量⋯⋯你竟然解除了三大封印？！但那又如何，黑暗將吞噬一切！」'
+  }
+}
+
+// 最終Boss戰觸發：生成Boss（持有全碎片則削弱15% HP）並進入戰鬥
+function startFinalBossBattle() {
+  const boss = generateFinalBoss()
+  if (gameState.sealFragments.length === 3) {
+    boss.hp = Math.floor(boss.hp * 0.85)
+  }
+  startBattle([boss])
 }
 
 // 下一級所需經驗（Lv1→2：100，每級+40）
@@ -761,7 +861,22 @@ function endBattle(result) {
   if (result === 'win') {
     const defeated = gameState.enemies[0]
 
-    // Boss 勝利：發放封印碎片（靜默提示）
+    // 最終Boss通關
+    if (defeated && defeated.isFinalBoss) {
+      const hasAllFragments = gameState.sealFragments.length === 3
+      if (hasAllFragments) {
+        setActionLog('✨ 你以封印之力擊敗了黑暗之主！世界恢復了平靜...')
+      } else {
+        setActionLog('⚔️ 你憑藉意志力擊敗了黑暗之主！')
+      }
+      setTimeout(() => {
+        alert('恭喜通關！即將進入結算... (待實作結算畫面)')
+        showScreen('screen-board')
+      }, 1500)
+      return
+    }
+
+    // 中Boss 勝利：發放封印碎片（靜默提示）
     if (defeated && defeated.isBoss && defeated.seal) {
       if (!gameState.sealFragments.includes(defeated.seal)) {
         gameState.sealFragments.push(defeated.seal)
@@ -786,7 +901,12 @@ function endBattle(result) {
     }
     alert('戰鬥勝利！')
   } else {
-    alert('戰鬥失敗！')
+    const dyingEnemy = gameState.enemies[0]
+    if (dyingEnemy && dyingEnemy.isFinalBoss) {
+      alert('你被黑暗吞噬了... (待實作死亡畫面)')
+    } else {
+      alert('戰鬥失敗！')
+    }
   }
   showScreen('screen-board')
   afterCellEvent()
@@ -1247,6 +1367,7 @@ function initGmTools() {
   document.getElementById('gm-boss-flame').addEventListener('click', () => { hide(); startBattle([{ ...BOSSES.boss_flame }]) })
   document.getElementById('gm-boss-shadow').addEventListener('click', () => { hide(); startBattle([{ ...BOSSES.boss_shadow }]) })
   document.getElementById('gm-boss-astral').addEventListener('click', () => { hide(); startBattle([{ ...BOSSES.boss_astral }]) })
+  document.getElementById('gm-boss-final').addEventListener('click', () => { hide(); startFinalBossBattle() })
 
   // 快速調整
   document.getElementById('gm-add-gold').addEventListener('click', () => {
@@ -1261,6 +1382,10 @@ function initGmTools() {
     hide()
     gameState.playerLevel++
     initUpgradeScreen(getTestUpgradeOptions())
+  })
+  document.getElementById('gm-set-turn-20').addEventListener('click', () => {
+    gameState.currentTurn = 20
+    updateBoardStatus()
   })
 }
 
