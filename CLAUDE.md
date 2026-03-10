@@ -33,7 +33,7 @@ board-game/
 - 畫面切換使用 showScreen(screenId)
 - 畫面 ID：screen-start、screen-job-select、screen-board、
   screen-battle、screen-upgrade、screen-event、
-  screen-item、screen-shop、screen-result、screen-gameover
+  screen-item、screen-shop、screen-result、screen-death
 - 畫面初始化函式命名：initXxxScreen()
 ### gameState 欄位
 - currentScreen：當前畫面 ID
@@ -78,7 +78,7 @@ board-game/
 - [x] 商店畫面
 - [x] 中Boss演出
 - [x] 最終Boss演出
-- [ ] 死亡畫面（Game Over）
+- [x] 死亡畫面（Game Over）
 - [ ] 結算畫面
 - [ ] 開始畫面（含存檔判斷）
 - [ ] 周目解鎖商店

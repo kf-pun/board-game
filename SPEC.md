@@ -159,7 +159,7 @@ DoT：🔥燃燒（上限5層）、☠️中毒（無上限）
 （待實作）
 ### 觸發時機
 - playerCurrentHp ≤ 0，endBattle('lose') 判斷為 isFinalBoss 以外的任何戰鬥，或最終Boss戰失敗
-### 畫面結構（screen-gameover）
+### 畫面結構（screen-death）
 - 全螢幕深色/紅色調遮罩（建議主色 #1a0000 或帶紅暈的深色）
 - 大字顯示「GAME OVER」（居中，強調紅色）
 ### 統計資料

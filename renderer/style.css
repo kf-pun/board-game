@@ -1282,3 +1282,57 @@ html, body {
 .gm-btn:hover {
   background-color: #3a3a6a;
 }
+
+/* ===== 死亡畫面 ===== */
+#screen-death {
+  background-color: #0d0000;
+  background-image: radial-gradient(ellipse at center, #2a0000 0%, #0d0000 70%);
+  align-items: center;
+  justify-content: center;
+}
+
+.death-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  text-align: center;
+}
+
+.death-title {
+  font-size: 96px;
+  color: #c0392b;
+  letter-spacing: 16px;
+  text-shadow: 0 0 40px rgba(192,57,43,0.8), 0 0 80px rgba(192,57,43,0.4);
+  font-weight: bold;
+}
+
+.death-subtitle {
+  font-size: 22px;
+  color: #8a3a3a;
+  letter-spacing: 4px;
+}
+
+.death-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: #aabbcc;
+  font-size: 16px;
+  letter-spacing: 2px;
+  padding: 20px 40px;
+  background-color: rgba(0,0,0,0.4);
+  border: 1px solid #3a1a1a;
+  border-radius: 8px;
+  min-width: 320px;
+  text-align: center;
+}
+
+.death-stats span {
+  color: #e2c97e;
+}
+
+.death-footer {
+  margin-top: 8px;
+}

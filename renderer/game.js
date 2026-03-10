@@ -901,15 +901,48 @@ function endBattle(result) {
     }
     alert('戰鬥勝利！')
   } else {
-    const dyingEnemy = gameState.enemies[0]
-    if (dyingEnemy && dyingEnemy.isFinalBoss) {
-      alert('你被黑暗吞噬了... (待實作死亡畫面)')
-    } else {
-      alert('戰鬥失敗！')
-    }
+    showDeathScreen()
+    return
   }
   showScreen('screen-board')
   afterCellEvent()
+}
+
+// 顯示死亡畫面
+function showDeathScreen() {
+  document.getElementById('death-stat-turn').textContent = gameState.currentTurn
+  document.getElementById('death-stat-level').textContent = gameState.playerLevel
+  showScreen('screen-death')
+}
+
+// 返回標題並重置單局狀態
+function returnToTitle() {
+  gameState.selectedJobIndex = 0
+  gameState.selectedJob = null
+  gameState.currentTurn = 1
+  gameState.gold = 50
+  gameState.playerPos = 0
+  gameState.boardCells = []
+  gameState.inventory = [null, null, null]
+  gameState.playerLevel = 1
+  gameState.playerExp = 0
+  gameState.playerSkills = []
+  gameState.pendingUpgradeOptions = []
+  gameState.selectedUpgradeCard = null
+  gameState.pendingItemOptions = []
+  gameState.selectedItemCard = null
+  gameState.itemDiscardMode = false
+  gameState.currentShopItems = []
+  gameState.shopDiscardMode = false
+  gameState.pendingShopItem = null
+  gameState.sealFragments = []
+  gameState.playerCrackArmor = 0
+  gameState.playerCurrentHp = 0
+  gameState.battleRound = 1
+  gameState.battlePhase = 'player'
+  gameState.enemies = []
+  gameState.activeInfoTab = 'player'
+  showScreen('screen-start')
 }
 
 // ===== 升級選擇畫面 =====
@@ -1059,6 +1092,11 @@ function resolveEventOption(event, optionIndex) {
       job.stats.hp,
       Math.max(0, gameState.playerCurrentHp + opt.effect.hp)
     )
+  }
+  // 血量歸零觸發死亡畫面
+  if (gameState.playerCurrentHp <= 0) {
+    setTimeout(() => showDeathScreen(), 400)
+    return
   }
   if (opt.effect.gold) {
     gameState.gold += opt.effect.gold

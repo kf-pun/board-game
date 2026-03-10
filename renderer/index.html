@@ -298,6 +298,21 @@
 
   </div>
 
+  <!-- 死亡畫面 -->
+  <div id="screen-death" class="screen">
+    <div class="death-container">
+      <h1 class="death-title">GAME OVER</h1>
+      <h2 class="death-subtitle">你被黑暗吞噬了...</h2>
+      <div class="death-stats" id="death-stats">
+        <p>生存回合：<span id="death-stat-turn">0</span></p>
+        <p>最終等級：<span id="death-stat-level">1</span></p>
+      </div>
+      <div class="death-footer">
+        <button class="btn btn-gray btn-wide" onclick="returnToTitle()">返回標題</button>
+      </div>
+    </div>
+  </div>
+
   <script src="data/jobs.js"></script>
   <script src="data/items.js"></script>
   <script src="data/enemies.js"></script>
