@@ -313,6 +313,30 @@
     </div>
   </div>
 
+  <!-- 結算畫面 -->
+  <div id="screen-result" class="screen">
+    <div class="result-container">
+      <h1 class="result-title">VICTORY</h1>
+      <h2 class="result-subtitle">冒險完成！黑暗已被驅散</h2>
+
+      <div id="result-seal-badge" class="hidden">
+        ✨ 完美通關：三大封印完全解除 ✨
+      </div>
+
+      <div class="result-stats">
+        <p>基礎分數：<span id="score-base">0</span></p>
+        <p>速戰加成：<span id="score-turn">0</span></p>
+        <p>健康狀態加成：<span id="score-hp">0</span></p>
+        <hr>
+        <p class="score-total-line">本次獲得分數：<span id="score-total" class="gold-text">0</span></p>
+        <p class="score-global-line">全域總積分：<span id="score-global">0</span></p>
+      </div>
+      <div class="result-footer">
+        <button class="btn btn-gold btn-wide" onclick="finishGame()">完成並返回標題</button>
+      </div>
+    </div>
+  </div>
+
   <script src="data/jobs.js"></script>
   <script src="data/items.js"></script>
   <script src="data/enemies.js"></script>

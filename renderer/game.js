@@ -869,10 +869,7 @@ function endBattle(result) {
       } else {
         setActionLog('⚔️ 你憑藉意志力擊敗了黑暗之主！')
       }
-      setTimeout(() => {
-        alert('恭喜通關！即將進入結算... (待實作結算畫面)')
-        showScreen('screen-board')
-      }, 1500)
+      setTimeout(() => showResultScreen(), 1500)
       return
     }
 
@@ -906,6 +903,49 @@ function endBattle(result) {
   }
   showScreen('screen-board')
   afterCellEvent()
+}
+
+// 顯示結算畫面（通關勝利）
+function showResultScreen() {
+  const job = gameState.selectedJob
+  const maxHp = job ? job.stats.hp : 100
+
+  // 計算分數
+  const scoreBase = 500 + gameState.playerLevel * 50
+  const scoreTurn = gameState.currentTurn <= 25
+    ? (25 - gameState.currentTurn) * 20
+    : 0
+  const scoreHp = Math.floor((gameState.playerCurrentHp / maxHp) * 200)
+  const hasAllFragments = gameState.sealFragments.length === 3
+  const scoreSeal = hasAllFragments ? 300 : 0
+  const scoreThisRun = scoreBase + scoreTurn + scoreHp + scoreSeal
+
+  // 更新 DOM
+  document.getElementById('score-base').textContent = scoreBase
+  document.getElementById('score-turn').textContent = scoreTurn
+  document.getElementById('score-hp').textContent = scoreHp
+  document.getElementById('score-total').textContent = scoreThisRun
+
+  // 封印徽章
+  const badge = document.getElementById('result-seal-badge')
+  if (hasAllFragments) {
+    badge.classList.remove('hidden')
+  } else {
+    badge.classList.add('hidden')
+  }
+
+  // 全域存檔
+  const prevGlobal = parseInt(localStorage.getItem('globalScore') || '0', 10)
+  const newGlobal = prevGlobal + scoreThisRun
+  localStorage.setItem('globalScore', String(newGlobal))
+  document.getElementById('score-global').textContent = newGlobal
+
+  showScreen('screen-result')
+}
+
+// 完成並返回標題（重置單局狀態）
+function finishGame() {
+  returnToTitle()
 }
 
 // 顯示死亡畫面
