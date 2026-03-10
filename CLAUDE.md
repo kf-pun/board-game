@@ -52,12 +52,26 @@ board-game/
 - playerCrackArmor：裂甲剩餘回合數（星界Boss二階段施加，防禦降 35%）
 
 > 詳細的核心函式命名與架構說明請參考 `FUNCTIONS.md`
-## 色彩規範
+## UI/UX 與視覺規範
+### 色彩規範
 - 主背景：#1a1a2e
 - 次背景：#16213e
 - 頂底列：#0f0f23
 - 強調金色：#f0c040
 - disabled：背景 #2a2a4a、文字 #666
+### 字體規範
+- 標題（h1/h2 及各畫面 title 類別）：`Noto Serif TC`，帶微弱 text-shadow 增加厚重感
+- 內文、數值、按鈕文字：`Noto Sans TC`
+- 字體皆透過 Google Fonts 引入，並設定 fallback：Microsoft JhengHei / PingFang TC
+### 微互動與動態（Micro-interactions）
+- **按鈕 `.btn`**：transition 0.2s；Hover 時微上浮 + 發光陰影；Active 時微下壓；disabled 狀態鎖定所有動態
+- **`.btn-gold`** 限定於所在畫面作用域，勿在全域重複定義覆蓋（以 `#screen-xxx .btn-gold` 範圍限定特殊樣式）
+- **卡片 `.upgrade-card` / `.item-card` / `.meta-card`**：transition 0.3s；Hover 時上浮 -6px + 加深陰影；selected 狀態加白框 glow
+- **畫面過場 `.screen`**：顯示時帶 0.3s fadeIn 淡入（`@keyframes fadeIn`，加在 `.screen.active`）
+### 材質與排版
+- **圓角**：面板/卡片統一 `border-radius: 12px`；按鈕 `8px`
+- **深度感**：背景面板使用微弱 `linear-gradient` 增加層次；頂部/底部操作列與道具槽使用 `inset box-shadow` 呈現凹陷立體感
+- **顏色作用域**：深色（暗金/深藍）按鈕樣式只寫在對應畫面的 CSS 範圍內，避免全域汙染
 ## 已知注意事項
 - macOS 標題列佔用約 28px，畫面元素總高度勿超過 692px
 - html/body/.screen 高度一律使用 100vh
