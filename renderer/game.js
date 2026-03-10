@@ -1,3 +1,65 @@
+// ===== 圖示字典（Icon Dictionary） =====
+// 使用 RPG Awesome 0.2.0 圖示庫（https://nagoshiashumari.github.io/Rpg-Awesome/）
+// 每個 key 對應一段 <i> HTML 字串，渲染時用 innerHTML 注入。
+// 未來替換成正式美術圖片時，只需修改此字典的 HTML 字串，無需改動其他邏輯。
+// 使用方式：element.innerHTML = ICONS.hp + ' 100'
+const ICONS = {
+  // --- 角色屬性 ---
+  hp:          '<i class="ra ra-health"></i>',          // ❤️ 生命值
+  hpUp:        '<i class="ra ra-health-increase"></i>',  // 回復量顯示
+  hpDown:      '<i class="ra ra-health-decrease"></i>',  // 受傷量顯示
+  gold:        '<i class="ra ra-gold-bar"></i>',          // 💰 金幣
+  attack:      '<i class="ra ra-sword"></i>',             // ⚔️ 攻擊力
+  defense:     '<i class="ra ra-shield"></i>',            // 🛡️ 防禦力
+  crit:        '<i class="ra ra-lightning"></i>',         // ⚡ 爆擊率
+  dodge:       '<i class="ra ra-player-dodge"></i>',      // 💨 閃避率
+  level:       '<i class="ra ra-trophy"></i>',            // ⭐ 等級／升級
+
+  // --- 棋盤格子 ---
+  cellBattle:  '<i class="ra ra-crossed-swords"></i>',   // ⚔️ 戰鬥格
+  cellItem:    '<i class="ra ra-ammo-bag"></i>',          // 🎁 道具格
+  cellShop:    '<i class="ra ra-gold-bar"></i>',          // 🏪 商店格
+  cellTrap:    '<i class="ra ra-skull"></i>',             // 💀 陷阱格
+  cellBless:   '<i class="ra ra-aura"></i>',              // ✨ 祝福格
+  cellBoss:    '<i class="ra ra-dragon"></i>',            // 🐉 Boss 格
+
+  // --- Boss / 敵人 ---
+  bossFlame:   '<i class="ra ra-fire"></i>',              // 🔥 火焰守護者
+  bossShadow:  '<i class="ra ra-moon-sun"></i>',          // 🌑 暗影使者
+  bossAstral:  '<i class="ra ra-sun"></i>',               // ⭐ 星界裁決者
+  enemy:       '<i class="ra ra-monster-skull"></i>',     // 👾 一般敵人
+
+  // --- 事件 ---
+  event:       '<i class="ra ra-scroll-unfurled"></i>',   // 📜 事件畫面裝飾
+  merchant:    '<i class="ra ra-hood"></i>',              // 🧳 旅行商人
+  warning:     '<i class="ra ra-interdiction"></i>',      // ⚠️ 警告型事件
+  ancient:     '<i class="ra ra-castle-emblem"></i>',     // 🗿 遺跡型事件
+
+  // --- 道具 ---
+  potion:      '<i class="ra ra-bubbling-potion"></i>',   // 🧪 生命藥水
+  rune:        '<i class="ra ra-rune-stone"></i>',        // ⚡ 爆擊符文
+  amulet:      '<i class="ra ra-round-shield"></i>',      // 🛡️ 防護護符
+  boots:       '<i class="ra ra-boot-stomp"></i>',        // 💨 疾風靴
+  bomb:        '<i class="ra ra-bomb-explosion"></i>',    // 💣 爆炸瓶
+
+  // --- 狀態效果 ---
+  burning:     '<i class="ra ra-fire"></i>',              // 🔥 燃燒
+  poison:      '<i class="ra ra-poison-cloud"></i>',      // ☠️ 中毒
+  crackArmor:  '<i class="ra ra-cracked-helm"></i>',      // 裂甲（防禦削減）
+  berserk:     '<i class="ra ra-monster-skull"></i>',     // 狂暴（Boss 二階段）
+
+  // --- Boss 技能 ---
+  skillEye:    '<i class="ra ra-eye-monster"></i>',       // 👁️ 星界Boss 邪眼
+  skillCrack:  '<i class="ra ra-cracked-helm"></i>',      // ⚔️ 裂甲重擊
+  skillRage:   '<i class="ra ra-dripping-blade"></i>',    // 💢 血怒
+  skillWill:   '<i class="ra ra-muscle-up"></i>',         // 💪 鬥魂
+
+  // --- UI 動作 ---
+  dice:        '<i class="ra ra-perspective-dice-random"></i>', // 🎲 擲骰子
+  metaShop:    '<i class="ra ra-castle-flag"></i>',       // 🏪 周目解鎖商店
+  upgrade:     '<i class="ra ra-trophy"></i>',            // ⭐ 升級選擇畫面
+}
+
 // ===== 狀態效果說明對照表 =====
 const STATUS_EFFECTS = {
   '強化': '攻擊力 +8（每層）',
