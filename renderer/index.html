@@ -47,7 +47,11 @@
 
       <!-- 職業卡片 -->
       <div class="job-card">
-        <div class="job-card-color" id="job-color"></div>
+        <div class="job-card-portrait">
+          <div class="job-portrait-emblem" id="job-emblem">
+            <i class="ra ra-shield"></i>
+          </div>
+        </div>
         <div class="job-card-info">
           <h3 class="job-card-name" id="job-name"></h3>
           <div class="job-stats">
@@ -162,7 +166,9 @@
 
       <!-- 左側：我方角色 -->
       <div class="battle-player">
-        <div class="battle-sprite player-sprite" id="player-sprite"></div>
+        <div class="job-portrait-emblem battle-player-emblem" id="player-sprite">
+          <i class="ra ra-shield"></i>
+        </div>
         <div class="battle-name" id="player-name"></div>
         <div class="hp-bar-wrap">
           <div class="hp-bar" id="player-hp-bar"></div>

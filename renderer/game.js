@@ -62,6 +62,15 @@ const ICONS = {
   upgrade:     '<i class="ra ra-trophy"></i>',            // ⭐ 升級選擇畫面
 }
 
+// ===== 職業徽章圖示對照表 =====
+// 對應 data/skills.js 圖示系統；icon class 需與 RPG Awesome 0.2.0 一致
+const JOB_PORTRAIT_ICONS = {
+  warrior:  'ra-shield',
+  assassin: 'ra-daggers',
+  mage:     'ra-lightning-bolt',
+  warlock:  'ra-voodoo-doll'
+}
+
 // ===== 狀態效果說明對照表 =====
 const STATUS_EFFECTS = {
   '強化': '攻擊力 +8（每層）',
@@ -252,7 +261,13 @@ function initStartScreen() {
 function renderJobCard() {
   const job = JOBS[gameState.selectedJobIndex]
 
-  document.getElementById('job-color').style.backgroundColor = job.color
+  // 更新職業徽章：套用主題色 class + 更換圖示
+  const emblem = document.getElementById('job-emblem')
+  if (emblem) {
+    emblem.className = `job-portrait-emblem job-${job.id}`
+    const iconEl = emblem.querySelector('i')
+    if (iconEl) iconEl.className = `ra ${JOB_PORTRAIT_ICONS[job.id] || 'ra-shield'}`
+  }
   document.getElementById('job-name').textContent = job.name
 
   document.getElementById('stat-hp').textContent = job.stats.hp
@@ -529,9 +544,10 @@ function startBattle(enemies = null) {
 function renderBattleScreen() {
   const job = gameState.selectedJob
 
-  // 我方角色
-  document.getElementById('player-sprite').style.backgroundColor = job.color
-  document.getElementById('player-sprite').textContent = job.name[0]
+  // 我方角色徽章：套用職業主題色 class + 圖示
+  const playerSprite = document.getElementById('player-sprite')
+  playerSprite.className = `job-portrait-emblem battle-player-emblem job-${job.id}`
+  playerSprite.innerHTML = `<i class="ra ${JOB_PORTRAIT_ICONS[job.id] || 'ra-shield'}"></i>`
   document.getElementById('player-name').textContent = job.name
   updateHpBar('player-hp-bar', gameState.playerCurrentHp, job.stats.hp)
   document.getElementById('player-hp-text').textContent =
