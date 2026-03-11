@@ -552,6 +552,7 @@ function renderBattleScreen() {
 
   updateBattleStatus()
   renderInfoContent(gameState.activeInfoTab)
+  renderBattleMenu()  // 重置普攻可用 + 根據技能清單更新 3 個技能槽
   setActionLog('')
 }
 
@@ -575,6 +576,81 @@ function updateBattleStatus() {
     phaseEl.textContent = '敵方行動'
     phaseEl.className = 'battle-status-center enemy-turn'
   }
+}
+
+// 渲染戰鬥下方選單（普攻 + 技能槽 × 3）
+// 每次進入玩家回合、或戰鬥初始化時呼叫，確保按鈕狀態乾淨
+function renderBattleMenu() {
+  // ① 普攻：無條件解鎖（進入玩家回合就可按）
+  document.getElementById('btn-attack').disabled = false
+
+  // ② 技能槽（最多 3 格）
+  for (let i = 0; i < 3; i++) {
+    const btn = document.getElementById(`btn-skill-${i}`)
+    if (!btn) continue
+    const skill = gameState.playerSkills[i]
+
+    if (!skill) {
+      // 空格
+      btn.innerHTML = `技能 ${i + 1}（空）`
+      btn.disabled = true
+      btn.onclick = null
+      btn.className = 'btn btn-gray action-btn'
+    } else if (!skill.cd) {
+      // 被動技能（cd === null）：顯示但不可主動觸發
+      btn.innerHTML = `${skill.emoji} ${skill.name} ⟨被動⟩`
+      btn.disabled = true
+      btn.onclick = null
+      btn.className = 'btn btn-gray action-btn'
+    } else {
+      const cd = skill.currentCd ?? 0
+      btn.innerHTML = cd > 0
+        ? `${skill.emoji} ${skill.name} (CD:${cd})`
+        : `${skill.emoji} ${skill.name}`
+      btn.disabled = cd > 0
+      btn.onclick = cd > 0 ? null : () => useSkill(i)
+      btn.className = `btn ${cd > 0 ? 'btn-gray' : 'btn-gold'} action-btn`
+    }
+  }
+}
+
+// 玩家使用技能
+function useSkill(index) {
+  if (gameState.battlePhase !== 'player') return
+  const skill = gameState.playerSkills[index]
+  if (!skill || !skill.cd || (skill.currentCd ?? 0) > 0) return
+
+  const job = gameState.selectedJob
+  const enemy = gameState.enemies[0]
+  let logText = `發動「${skill.name}」！`
+
+  if (skill.id === 'crack_strike') {
+    const dmg = Math.max(0, Math.floor(job.stats.atk * 1.8) - enemy.def)
+    enemy.hp = Math.max(0, enemy.hp - dmg)
+    updateHpBar('enemy-hp-bar-0', enemy.hp, enemy.maxHp)
+    document.getElementById('enemy-hp-text-0').textContent = `${enemy.hp} / ${enemy.maxHp}`
+    const spr = document.getElementById('enemy-sprite-0')
+    if (spr) showDamagePopup(spr, dmg)
+    logText += `對 ${enemy.name} 造成 ${dmg} 點傷害！附加裂甲效果`
+    skill.currentCd = skill.cd
+    if (enemy.hp <= 0) {
+      setActionLog(logText)
+      setTimeout(() => endBattle('win'), 600)
+      return
+    }
+  } else if (skill.id === 'blood_rage') {
+    logText += `獲得強化 3 層！（效果待完整實裝）`
+    skill.currentCd = skill.cd
+  } else {
+    logText += `（技能效果待實裝）`
+    skill.currentCd = skill.cd
+  }
+
+  setActionLog(logText)
+  gameState.battlePhase = 'enemy'
+  updateBattleStatus()
+  renderBattleMenu()
+  setTimeout(enemyTurn, 900)
 }
 
 // 渲染資訊面板內容
@@ -739,7 +815,8 @@ function enemyTurn() {
     gameState.battleRound++
     gameState.battlePhase = 'player'
     updateBattleStatus()
-    document.getElementById('btn-attack').disabled = false
+    gameState.playerSkills.forEach(s => { if (s && (s.currentCd ?? 0) > 0) s.currentCd-- })
+    renderBattleMenu()
     return
   }
 
@@ -774,7 +851,8 @@ function enemyTurn() {
   gameState.battleRound++
   gameState.battlePhase = 'player'
   updateBattleStatus()
-  document.getElementById('btn-attack').disabled = false
+  gameState.playerSkills.forEach(s => { if (s && (s.currentCd ?? 0) > 0) s.currentCd-- })
+  renderBattleMenu()
   setActionLog('你的回合')
 }
 
@@ -883,7 +961,8 @@ function bossCastSpecial(enemy) {
   gameState.battleRound++
   gameState.battlePhase = 'player'
   updateBattleStatus()
-  document.getElementById('btn-attack').disabled = false
+  gameState.playerSkills.forEach(s => { if (s && (s.currentCd ?? 0) > 0) s.currentCd-- })
+  renderBattleMenu()
 }
 
 // 最終Boss動態生成（依玩家等級計算數值）
@@ -1321,6 +1400,7 @@ function selectUpgradeCard(index) {
 function confirmUpgrade() {
   const selected = gameState.pendingUpgradeOptions[gameState.selectedUpgradeCard]
   if (selected && gameState.playerSkills.length < 3) {
+    selected.currentCd = 0
     gameState.playerSkills.push(selected)
   }
   showScreen('screen-board')

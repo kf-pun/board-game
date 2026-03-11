@@ -1494,13 +1494,13 @@ h1, h2,
   color: #f0c040;
 }
 
-.btn-gold {
+#screen-result .btn-gold {
   background-color: #8a6a00;
   color: #f0c040;
   border: 1px solid #f0c040;
 }
 
-.btn-gold:hover:not(:disabled) {
+#screen-result .btn-gold:hover:not(:disabled) {
   background-color: #a07800;
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(240, 192, 64, 0.45);
