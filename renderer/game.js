@@ -496,6 +496,13 @@ function startBattle(enemies = null) {
   gameState.activeInfoTab = 'player'
   gameState.enemies = enemies
   gameState.playerCrackArmor = 0  // 重置裂甲狀態
+  // 初始化敵方狀態欄位
+  enemies.forEach(e => {
+    e.burning    = e.burning    ?? 0
+    e.poisoned   = e.poisoned   ?? 0
+    e.crackArmor = e.crackArmor ?? 0
+    e.frozen     = e.frozen     ?? 0
+  })
   showScreen('screen-battle')
   renderBattleScreen()
 
@@ -596,17 +603,17 @@ function renderBattleMenu() {
       btn.disabled = true
       btn.onclick = null
       btn.className = 'btn btn-gray action-btn'
-    } else if (!skill.cd) {
-      // 被動技能（cd === null）：顯示但不可主動觸發
-      btn.innerHTML = `${skill.emoji} ${skill.name} ⟨被動⟩`
+    } else if (!skill.maxCd) {
+      // 被動技能（maxCd === null）：顯示但不可主動觸發
+      btn.innerHTML = `${ICONS[skill.icon] || ''} ${skill.name} ⟨被動⟩`
       btn.disabled = true
       btn.onclick = null
       btn.className = 'btn btn-gray action-btn'
     } else {
       const cd = skill.currentCd ?? 0
       btn.innerHTML = cd > 0
-        ? `${skill.emoji} ${skill.name} (CD:${cd})`
-        : `${skill.emoji} ${skill.name}`
+        ? `${ICONS[skill.icon] || ''} ${skill.name} (CD:${cd})`
+        : `${ICONS[skill.icon] || ''} ${skill.name}`
       btn.disabled = cd > 0
       btn.onclick = cd > 0 ? null : () => useSkill(i)
       btn.className = `btn ${cd > 0 ? 'btn-gray' : 'btn-gold'} action-btn`
@@ -618,35 +625,104 @@ function renderBattleMenu() {
 function useSkill(index) {
   if (gameState.battlePhase !== 'player') return
   const skill = gameState.playerSkills[index]
-  if (!skill || !skill.cd || (skill.currentCd ?? 0) > 0) return
+  if (!skill || !skill.maxCd || (skill.currentCd ?? 0) > 0) return
 
   const job = gameState.selectedJob
   const enemy = gameState.enemies[0]
-  let logText = `發動「${skill.name}」！`
+  const skillIcon = ICONS[skill.icon] || ''
 
-  if (skill.id === 'crack_strike') {
-    const dmg = Math.max(0, Math.floor(job.stats.atk * 1.8) - enemy.def)
+  // ① 進入冷卻
+  skill.currentCd = skill.maxCd
+
+  // ② 計算傷害
+  let dmg = 0
+  let logParts = [`${skillIcon} ${skill.name}：`]
+
+  if (skill.multiplier && skill.multiplier > 0) {
+    const eff = skill.effect
+    const ignoreDef = eff && eff.type === 'ignoreDef'
+
+    // 計算有效防禦（考慮裂甲狀態）
+    const effectiveDef = (enemy.crackArmor ?? 0) > 0
+      ? Math.floor(enemy.def * 0.65)
+      : enemy.def
+
+    const rawDmg = Math.floor(job.stats.atk * skill.multiplier)
+    dmg = ignoreDef ? rawDmg : Math.max(0, rawDmg - effectiveDef)
+
+    // 星界碎片：技能傷害 ×1.2
+    if (gameState.sealFragments.includes('astral')) {
+      dmg = Math.ceil(dmg * 1.2)
+    }
+
+    // 扣除敵人 HP
     enemy.hp = Math.max(0, enemy.hp - dmg)
     updateHpBar('enemy-hp-bar-0', enemy.hp, enemy.maxHp)
     document.getElementById('enemy-hp-text-0').textContent = `${enemy.hp} / ${enemy.maxHp}`
     const spr = document.getElementById('enemy-sprite-0')
     if (spr) showDamagePopup(spr, dmg)
-    logText += `對 ${enemy.name} 造成 ${dmg} 點傷害！附加裂甲效果`
-    skill.currentCd = skill.cd
-    if (enemy.hp <= 0) {
-      setActionLog(logText)
-      setTimeout(() => endBattle('win'), 600)
-      return
-    }
-  } else if (skill.id === 'blood_rage') {
-    logText += `獲得強化 3 層！（效果待完整實裝）`
-    skill.currentCd = skill.cd
-  } else {
-    logText += `（技能效果待實裝）`
-    skill.currentCd = skill.cd
+    logParts.push(`對 ${enemy.name} 造成 ${dmg} 點傷害`)
+    if (ignoreDef) logParts.push('（無視防禦）')
   }
 
-  setActionLog(logText)
+  // ③ 處理附加效果
+  if (skill.effect) {
+    const eff = skill.effect
+    switch (eff.type) {
+
+      case 'crackArmor':
+        enemy.crackArmor = (enemy.crackArmor ?? 0) + eff.duration
+        logParts.push(`，施加${ICONS.crackArmor}裂甲 ${eff.duration} 回合`)
+        break
+
+      case 'burn':
+        enemy.burning = Math.min(5, (enemy.burning ?? 0) + eff.layers)
+        logParts.push(`，附加${ICONS.burning}燃燒 ${eff.layers} 層（共 ${enemy.burning} 層）`)
+        break
+
+      case 'poison':
+        enemy.poisoned = (enemy.poisoned ?? 0) + eff.layers
+        logParts.push(`，附加${ICONS.poison}中毒 ${eff.layers} 層（共 ${enemy.poisoned} 層）`)
+        break
+
+      case 'freeze':
+        enemy.frozen = (enemy.frozen ?? 0) + eff.duration
+        logParts.push(`，凍結敵方 ${eff.duration} 回合`)
+        break
+
+      case 'lifeDrain': {
+        const heal = Math.floor(dmg * eff.ratio)
+        if (heal > 0) {
+          gameState.playerCurrentHp = Math.min(
+            job.stats.hp,
+            gameState.playerCurrentHp + heal
+          )
+          updateHpBar('player-hp-bar', gameState.playerCurrentHp, job.stats.hp)
+          document.getElementById('player-hp-text').textContent =
+            `${gameState.playerCurrentHp} / ${job.stats.hp}`
+          logParts.push(`，吸取 ${ICONS.hp}${heal} HP`)
+        }
+        break
+      }
+
+      case 'ignoreDef':
+        // 傷害計算已處理，log 已加入
+        break
+    }
+  }
+
+  setActionLog(logParts.join(''))
+
+  // ④ 檢查敵人死亡
+  if (enemy.hp <= 0) {
+    setTimeout(() => endBattle('win'), 600)
+    return
+  }
+
+  // ⑤ 檢查 Boss 階段切換
+  if (checkBossPhaseTransition(enemy)) return
+
+  // ⑥ 切換至敵方回合
   gameState.battlePhase = 'enemy'
   updateBattleStatus()
   renderBattleMenu()
@@ -760,21 +836,7 @@ function playerAttack() {
   }
 
   // Boss 階段切換
-  if (enemy.isFinalBoss) {
-    // 最終Boss：60% → 第二階段，30% → 第三階段
-    if (enemy.hp <= enemy.maxHp * 0.3 && enemy.phase < 3) {
-      triggerFinalBossPhase3(enemy)
-      return
-    }
-    if (enemy.hp <= enemy.maxHp * 0.6 && enemy.phase === 1) {
-      triggerFinalBossPhase2(enemy)
-      return
-    }
-  } else if (enemy.isBoss && enemy.hp <= enemy.maxHp * 0.5 && enemy.phase === 1) {
-    // 中Boss二階段切換（HP 降至 50%）
-    triggerBossPhase2(enemy)
-    return  // triggerBossPhase2 內部接管後續流程
-  }
+  if (checkBossPhaseTransition(enemy)) return
 
   // 切換敵方回合
   gameState.battlePhase = 'enemy'
@@ -782,14 +844,54 @@ function playerAttack() {
   setTimeout(enemyTurn, 900)
 }
 
+// ===== 輔助函式 =====
+
+// Boss 階段切換判斷（playerAttack / useSkill 共用）
+// 返回 true 表示已觸發切換（呼叫端需 return）
+function checkBossPhaseTransition(enemy) {
+  if (enemy.isFinalBoss) {
+    if (enemy.hp <= enemy.maxHp * 0.3 && enemy.phase < 3) {
+      triggerFinalBossPhase3(enemy)
+      return true
+    }
+    if (enemy.hp <= enemy.maxHp * 0.6 && enemy.phase === 1) {
+      triggerFinalBossPhase2(enemy)
+      return true
+    }
+  } else if (enemy.isBoss && enemy.hp <= enemy.maxHp * 0.5 && enemy.phase === 1) {
+    triggerBossPhase2(enemy)
+    return true
+  }
+  return false
+}
+
+// 判斷玩家是否持有某被動技能
+function hasPassive(skillId) {
+  return gameState.playerSkills.some(s => s && s.id === skillId)
+}
+
+// 套用被動技能的永久屬性加成（於 confirmUpgrade 時呼叫）
+function applyPassiveSkill(skill) {
+  if (!skill || skill.maxCd !== null || !skill.effect) return
+  const stats = gameState.selectedJob.stats
+  const eff = skill.effect
+  switch (eff.type) {
+    case 'passiveDef':   stats.def   += eff.bonus; break
+    case 'passiveDodge': stats.dodge += eff.bonus; break
+    case 'passiveCrit':  stats.crit  += eff.bonus; break
+    // passiveDotBoost 在 DoT 計算時動態查詢 hasPassive()，不直接改 stats
+  }
+}
+
 // 敵方回合
 function enemyTurn() {
   const job = gameState.selectedJob
   const enemy = gameState.enemies[0]
+  const dotMult = hasPassive('void_echo') ? 1.5 : 1
 
-  // ④ 敵方 DoT 結算（燃燒）
+  // ④ 敵方 DoT 結算——燃燒
   if ((enemy.burning || 0) > 0) {
-    const burnDmg = Math.floor((4 + job.stats.atk * 0.12) * enemy.burning)
+    const burnDmg = Math.floor((4 + job.stats.atk * 0.12) * enemy.burning * dotMult)
     enemy.hp = Math.max(0, enemy.hp - burnDmg)
     updateHpBar('enemy-hp-bar-0', enemy.hp, enemy.maxHp)
     document.getElementById('enemy-hp-text-0').textContent = `${enemy.hp} / ${enemy.maxHp}`
@@ -798,6 +900,32 @@ function enemyTurn() {
       setTimeout(() => endBattle('win'), 600)
       return
     }
+  }
+
+  // ④ 敵方 DoT 結算——中毒
+  if ((enemy.poisoned ?? 0) > 0) {
+    const poisonDmg = Math.floor(8 * enemy.poisoned * dotMult)
+    enemy.hp = Math.max(0, enemy.hp - poisonDmg)
+    updateHpBar('enemy-hp-bar-0', enemy.hp, enemy.maxHp)
+    document.getElementById('enemy-hp-text-0').textContent = `${enemy.hp} / ${enemy.maxHp}`
+    setActionLog(`${ICONS.poison} 中毒：${enemy.name} 受到 ${poisonDmg} 點持續傷害（${enemy.poisoned} 層）`)
+    if (enemy.hp <= 0) {
+      setTimeout(() => endBattle('win'), 600)
+      return
+    }
+  }
+
+  // ⑤ 冰凍：跳過敵方本回合攻擊
+  if ((enemy.frozen ?? 0) > 0) {
+    enemy.frozen--
+    setActionLog(`${enemy.name} 被冰凍，行動被跳過！`)
+    enemy.crackArmor = Math.max(0, (enemy.crackArmor ?? 0) - 1)
+    gameState.battleRound++
+    gameState.battlePhase = 'player'
+    updateBattleStatus()
+    gameState.playerSkills.forEach(s => { if (s && (s.currentCd ?? 0) > 0) s.currentCd-- })
+    renderBattleMenu()
+    return
   }
 
   // ⑤ Boss 二/三階段專屬技能
@@ -812,6 +940,7 @@ function enemyTurn() {
   // 閃避判斷（玩家閃避率）
   if (Math.random() * 100 < job.stats.dodge) {
     setActionLog(`你閃避了 ${enemy.name} 的攻擊！`)
+    enemy.crackArmor = Math.max(0, (enemy.crackArmor ?? 0) - 1)
     gameState.battleRound++
     gameState.battlePhase = 'player'
     updateBattleStatus()
@@ -847,7 +976,8 @@ function enemyTurn() {
     return
   }
 
-  // 回到玩家回合
+  // 回到玩家回合（⑥ 回合結束結算：CD -1、裂甲持續時間 -1）
+  enemy.crackArmor = Math.max(0, (enemy.crackArmor ?? 0) - 1)
   gameState.battleRound++
   gameState.battlePhase = 'player'
   updateBattleStatus()
@@ -958,6 +1088,7 @@ function bossCastSpecial(enemy) {
     setTimeout(() => endBattle('lose'), 600)
     return
   }
+  enemy.crackArmor = Math.max(0, (enemy.crackArmor ?? 0) - 1)
   gameState.battleRound++
   gameState.battlePhase = 'player'
   updateBattleStatus()
@@ -1005,31 +1136,27 @@ function getNextLevelExp(level) {
   return 100 + (level - 1) * 40
 }
 
-// 測試用升級選項（暫時寫死）
-function getTestUpgradeOptions() {
-  return [
-    {
-      id: 'crack_strike',
-      emoji: ICONS.skillCrack, name: '裂甲重擊',
-      type: '主動', tag: 'new',
-      desc: '造成攻擊力×180%傷害，附加裂甲2回合',
-      cd: 3
-    },
-    {
-      id: 'blood_rage',
-      emoji: ICONS.skillRage, name: '血怒',
-      type: '主動', tag: 'new',
-      desc: '獲得強化3層（2回合）',
-      cd: 4
-    },
-    {
-      id: 'fighting_spirit',
-      emoji: ICONS.skillWill, name: '鬥魂',
-      type: '被動', tag: 'new',
-      desc: 'HP低於30%時每回合自動獲得恢復1層',
-      cd: null
-    }
-  ]
+// 根據當前職業從 SKILLS 資料庫抽取升級選項（3張，不重複）
+function getUpgradeOptions() {
+  const jobId = gameState.selectedJob ? gameState.selectedJob.id : null
+  const heldIds = new Set(gameState.playerSkills.map(s => s && s.id).filter(Boolean))
+
+  // 篩選可選技能：職業符合 + 尚未持有
+  const pool = SKILLS.filter(s =>
+    (s.job === jobId || s.job === 'common') && !heldIds.has(s.id)
+  )
+
+  // 隨機抽取最多 3 張
+  const shuffled = pool.slice().sort(() => Math.random() - 0.5)
+  const picks = shuffled.slice(0, 3)
+
+  // 若可選技能不足 3 張，補入持有技能的升級版（目前技能無等級，以重複填充防呆）
+  while (picks.length < 3 && SKILLS.length > 0) {
+    const fallback = SKILLS.filter(s => s.job === jobId || s.job === 'common')
+    picks.push(fallback[picks.length % fallback.length] || SKILLS[0])
+  }
+
+  return picks.map(s => ({ ...s, tag: 'new' }))
 }
 
 // 戰鬥結束
@@ -1069,7 +1196,7 @@ function endBattle(result) {
     if (gameState.playerExp >= needed) {
       gameState.playerExp -= needed
       gameState.playerLevel++
-      initUpgradeScreen(getTestUpgradeOptions())
+      initUpgradeScreen(getUpgradeOptions())
       return
     }
     alert('戰鬥勝利！')
@@ -1335,7 +1462,7 @@ function initUpgradeScreen(options) {
     const skill = gameState.playerSkills[i]
     const slot = document.createElement('div')
     slot.className = 'upgrade-skill-slot ' + (skill ? 'has-skill' : 'empty-slot')
-    slot.innerHTML = skill ? `${skill.emoji} ${skill.name}` : '空'
+    slot.innerHTML = skill ? `${ICONS[skill.icon] || ''} ${skill.name}` : '空'
     skillsBar.appendChild(slot)
   }
 
@@ -1351,8 +1478,8 @@ function initUpgradeScreen(options) {
     else if (opt.tag === 'upgrade') tagHtml = `<span class="tag tag-upgrade">Lv.${opt.currentLv}→${opt.currentLv + 1}</span>`
     else if (opt.tag === 'max') tagHtml = '<span class="tag tag-max">MAX</span>'
 
-    const cdHtml = (opt.type === '主動' && opt.cd)
-      ? `<div class="upgrade-card-cd">⏱ CD：${opt.cd}回合</div>`
+    const cdHtml = (opt.type === '主動' && opt.maxCd)
+      ? `<div class="upgrade-card-cd">⏱ CD：${opt.maxCd}回合</div>`
       : ''
 
     // 偵測說明中的狀態關鍵字，生成提示區
@@ -1366,7 +1493,7 @@ function initUpgradeScreen(options) {
       : ''
 
     card.innerHTML = `
-      <div class="upgrade-card-title">${opt.emoji} ${opt.name}</div>
+      <div class="upgrade-card-title">${ICONS[opt.icon] || ''} ${opt.name}</div>
       <div class="upgrade-card-tags">
         <span class="tag tag-type">${opt.type}</span>
         ${tagHtml}
@@ -1402,6 +1529,7 @@ function confirmUpgrade() {
   if (selected && gameState.playerSkills.length < 3) {
     selected.currentCd = 0
     gameState.playerSkills.push(selected)
+    applyPassiveSkill(selected)  // 被動技能立即套用屬性加成
   }
   showScreen('screen-board')
   afterCellEvent()
@@ -1792,7 +1920,7 @@ function initGmTools() {
   document.getElementById('gm-upgrade').addEventListener('click', () => {
     hide()
     gameState.playerLevel++
-    initUpgradeScreen(getTestUpgradeOptions())
+    initUpgradeScreen(getUpgradeOptions())
   })
   document.getElementById('gm-set-turn-20').addEventListener('click', () => {
     gameState.currentTurn = 20
